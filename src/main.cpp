@@ -1,7 +1,7 @@
 /**
   *     PartsBasedDetectorOnVideo
   *
-  *  Huge chuncks of code shamelessly taken from Hilton Bristow's demo for
+  *  Huge chunks of code shamelessly taken from Hilton Bristow's demo for
   *  PartsBasedDetector.
   *
   *
@@ -13,6 +13,7 @@
 
 #include <glog/logging.h>
 #include <boost/filesystem.hpp>
+#include <stdio.h>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -27,6 +28,8 @@
 
 using namespace cv;
 using namespace std;
+
+#define OUTPUT_FILENAME_FORMAT "detection_frame%06d.txt"
 
 int main(int argc, char *argv[])
 {
@@ -60,6 +63,14 @@ int main(int argc, char *argv[])
         exit(-3);
     }
 
+    // TODO: check
+    // check output folder
+    string outputFilePattern = (string) argv[3];
+    if( outputFilePattern[outputFilePattern.length()-1] != '/' ){
+        outputFilePattern.append("/");
+    }
+    outputFilePattern.append(OUTPUT_FILENAME_FORMAT);
+
     // create the PartsBasedDetector and distribute the model parameters
     Mat_<float> depth; // we don't have one for the video, so it's just a dummy variable
     PartsBasedDetector<float> pbd;
@@ -73,16 +84,27 @@ int main(int argc, char *argv[])
         exit(-4);
     }
     double frameCount = videoSrc.get(CV_CAP_PROP_FRAME_COUNT);
+    double frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
+    DLOG(INFO) << "Frame count: " << frameCount;
+    DLOG(INFO) << "Start frame no: " << frameNo;
 
     // main loop
-    // detect potential candidates in the image
     DLOG(INFO) << "main loop";
     vector<Candidate> candidates;
     Mat curFrameIm;
-    while(1){
+    char outputFilenameBuffer[1024];
+    while(frameNo < frameCount){
         candidates.clear();
         videoSrc >> curFrameIm;
+        frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         pbd.detect(curFrameIm, depth, candidates);
+        // TODO: non-maximum suppression here
+
+        sprintf(outputFilenameBuffer, outputFilePattern.c_str(), frameNo);
+        // TODO: output part here
+        // cleanup
+        if(!curFrameIm.empty())
+            curFrameIm.release();
     }
 
     // cleanup
