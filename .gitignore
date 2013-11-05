@@ -1,3 +1,7 @@
+# QT project files
+*.user
+*~
+
 # Compiled Object files
 *.slo
 *.lo
