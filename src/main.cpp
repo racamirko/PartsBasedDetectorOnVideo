@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
         exit(-3);
     }
 
-    // TODO: check
     // check output folder
     string outputFilePattern = (string) argv[3];
     if( outputFilePattern[outputFilePattern.length()-1] != '/' ){
@@ -104,7 +103,7 @@ int main(int argc, char *argv[])
     char outputFilenameBuffer[1024];
     while(frameNo < 10){ //frameCount){
         DLOG(INFO) << "FrameNo " << frameNo;
-        cout << "FrameNo " << frameNo;
+        cout << "FrameNo " << frameNo << endl;
 
         candidates.clear();
         videoSrc >> curFrameIm;

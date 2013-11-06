@@ -41,6 +41,6 @@
 std::ostream& operator<<(std::ostream& _stream, const vectorCandidate& _vecCandidates){
     int curCandIdx = 0;
     for( const Candidate& c : _vecCandidates ){
-        _stream << "Candidate #" << curCandIdx++ << c.score() << std::endl;
+        _stream << "Candidate #" << curCandIdx++ << "\ts=" << c.score() << std::endl;
     }
 }
