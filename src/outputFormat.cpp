@@ -37,10 +37,17 @@
  */
 
 #include "outputFormat.h"
+#include <iomanip>
 
 std::ostream& operator<<(std::ostream& _stream, const vectorCandidate& _vecCandidates){
-    int curCandIdx = 0;
-    for( const Candidate& c : _vecCandidates ){
-        _stream << "Candidate #" << curCandIdx++ << "\ts=" << c.score() << std::endl;
+    // format [ frameNo, compNo, mixtureNo, score (.4f), comp1_x1 (.2f), comp1_y1, comp1_x2, comp1_y2 ...]
+    for( auto& c : _vecCandidates ){
+        _stream << "0, " << c.parts().size() << ", " << c.component() << ", "
+                << std::setprecision(4) << c.score();
+        // sub-parts
+        _stream << std::setprecision(2);
+        for( const cv::Rect& r : c.parts() )
+            _stream << ", " << r.x << ", " << r.y << ", " << r.x+r.width << ", " << r.y+r.height;
+        _stream << std::endl;
     }
 }

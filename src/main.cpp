@@ -14,6 +14,7 @@
 #include <glog/logging.h>
 #include <boost/filesystem.hpp>
 #include <stdio.h>
+#include <fstream>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -110,12 +111,13 @@ int main(int argc, char *argv[])
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         pbd.detect(curFrameIm, depth, candidates);
         Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
-
+        // output
         sprintf(outputFilenameBuffer, outputFilePattern.c_str(), frameNo);
-        // TODO: output part here
-        // TEST output part
-        cout << candidates;
+        ofstream outFile(outputFilenameBuffer);
+        outFile << candidates;
+
         // cleanup
+        outFile.close();
         if(!curFrameIm.empty())
             curFrameIm.release();
     }
