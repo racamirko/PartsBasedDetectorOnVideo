@@ -33,7 +33,7 @@
 using namespace cv;
 using namespace std;
 
-#define OUTPUT_FILENAME_FORMAT "detection_frame%06d.txt"
+#define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_NMS_THRESHOLD 0.3f
 #define DEFAULT_MIRRORING true
 
@@ -107,16 +107,18 @@ int main(int argc, char *argv[])
     vectorCandidate candidates;
     Mat curFrameIm;
     char outputFilenameBuffer[1024];
-    while(frameNo < 3) {//frameCount){
+    while(frameNo < frameCount){
         DLOG(INFO) << "FrameNo " << frameNo;
-        cout << "FrameNo " << frameNo << endl;
+        cout << "FrameNo " << frameNo << "[ " << ((float)frameNo/(float)frameCount*100.0f) << "%]" << endl;
 
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         videoSrc >> curFrameIm;
 
         pbd.detect(curFrameIm, depth, candidates);
+#ifndef NDEBUG
         gOutputFormat = FT_BBOX_BRIEF;
+#endif
         DLOG(INFO) << "Found original: " << candidates;
         if(mirroring){
             vectorCandidate mirroredCandidates;
@@ -133,7 +135,9 @@ int main(int argc, char *argv[])
         // output
         sprintf(outputFilenameBuffer, outputFilePattern.c_str(), (int) frameNo);
         ofstream outFile(outputFilenameBuffer);
+#ifndef NDEBUG
         gOutputFormat = FT_FULL_OUTPUT;
+#endif
         outFile << candidates;
 
         // cleanup
