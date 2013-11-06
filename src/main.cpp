@@ -102,17 +102,17 @@ int main(int argc, char *argv[])
     vectorCandidate candidates;
     Mat curFrameIm;
     char outputFilenameBuffer[1024];
-    while(frameNo < 10){ //frameCount){
+    while(frameNo < frameCount){
         DLOG(INFO) << "FrameNo " << frameNo;
         cout << "FrameNo " << frameNo << endl;
 
         candidates.clear();
-        videoSrc >> curFrameIm;
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
+        videoSrc >> curFrameIm;
         pbd.detect(curFrameIm, depth, candidates);
         Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
         // output
-        sprintf(outputFilenameBuffer, outputFilePattern.c_str(), frameNo);
+        sprintf(outputFilenameBuffer, outputFilePattern.c_str(), (int) frameNo);
         ofstream outFile(outputFilenameBuffer);
         outFile << candidates;
 
