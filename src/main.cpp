@@ -26,6 +26,8 @@
     #include <MatlabIOModel.hpp>
 #endif
 
+#include "outputFormat.h"
+
 using namespace cv;
 using namespace std;
 
@@ -100,7 +102,10 @@ int main(int argc, char *argv[])
     vectorCandidate candidates;
     Mat curFrameIm;
     char outputFilenameBuffer[1024];
-    while(frameNo < frameCount){
+    while(frameNo < 10){ //frameCount){
+        DLOG(INFO) << "FrameNo " << frameNo;
+        cout << "FrameNo " << frameNo;
+
         candidates.clear();
         videoSrc >> curFrameIm;
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
@@ -109,6 +114,8 @@ int main(int argc, char *argv[])
 
         sprintf(outputFilenameBuffer, outputFilePattern.c_str(), frameNo);
         // TODO: output part here
+        // TEST output part
+        cout << candidates;
         // cleanup
         if(!curFrameIm.empty())
             curFrameIm.release();
