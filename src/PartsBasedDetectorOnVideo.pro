@@ -21,3 +21,5 @@ INCLUDEPATH += /usr/local/include /home/raca/repo/outside_projects/PartsBasedDet
 LIBS += -L/usr/lib -L/usr/local/lib -lPartsBasedDetector -lopencv_core -lopencv_highgui -lglog -lboost_filesystem -lboost_system
 
 SOURCES += main.cpp
+
+HEADERS +=

@@ -17,31 +17,38 @@
 
 #include <opencv2/highgui/highgui.hpp>
 
-#include "PartsBasedDetector.hpp"
-#include "Candidate.hpp"
-#include "FileStorageModel.hpp"
+#include <PartsBasedDetector.hpp>
+#include <Candidate.hpp>
+#include <FileStorageModel.hpp>
 
 #define WITH_MATLABIO
 #ifdef WITH_MATLABIO
-    #include "MatlabIOModel.hpp"
+    #include <MatlabIOModel.hpp>
 #endif
 
 using namespace cv;
 using namespace std;
 
 #define OUTPUT_FILENAME_FORMAT "detection_frame%06d.txt"
+#define DEFAULT_NMS_THRESHOLD 0.3f
 
 int main(int argc, char *argv[])
 {
     google::InitGoogleLogging(argv[0]);
     DLOG(INFO) << "Execution started";
-    if (argc != 5) {
-        printf("Usage: PartsBasedDetectorOnVideo model_file video_file output_folder\n");
+
+    if (argc < 4) {
+        printf("Usage: PartsBasedDetectorOnVideo model_file video_file output_folder [nmsThreshold]\n");
         exit(-1);
     }
 
     // determine the type of model to read
     boost::scoped_ptr<Model> model;
+    float nmsThreshold = DEFAULT_NMS_THRESHOLD;
+    if( argc >= 5 ){
+        nmsThreshold = atof(argv[4]);
+    }
+
     string ext = boost::filesystem::path(argv[1]).extension().string();
     if (ext.compare(".xml") == 0 || ext.compare(".yaml") == 0) {
         model.reset(new FileStorageModel);
@@ -90,7 +97,7 @@ int main(int argc, char *argv[])
 
     // main loop
     DLOG(INFO) << "main loop";
-    vector<Candidate> candidates;
+    vectorCandidate candidates;
     Mat curFrameIm;
     char outputFilenameBuffer[1024];
     while(frameNo < frameCount){
@@ -98,7 +105,7 @@ int main(int argc, char *argv[])
         videoSrc >> curFrameIm;
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         pbd.detect(curFrameIm, depth, candidates);
-        // TODO: non-maximum suppression here
+        Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
 
         sprintf(outputFilenameBuffer, outputFilePattern.c_str(), frameNo);
         // TODO: output part here
