@@ -15,6 +15,7 @@
 #include <boost/filesystem.hpp>
 #include <stdio.h>
 #include <fstream>
+#include <ncurses.h>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -36,6 +37,9 @@ using namespace std;
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_NMS_THRESHOLD 0.3f
 #define DEFAULT_MIRRORING true
+
+void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
+void updateDisplay(int _frame, float _perc);
 
 int main(int argc, char *argv[])
 {
@@ -95,12 +99,16 @@ int main(int argc, char *argv[])
     if( !videoSrc.isOpened() ){
         printf("Could not read video file\n");
         LOG(FATAL) << "Could not read video file: " << argv[2];
+        endwin();
         exit(-4);
     }
     double frameCount = videoSrc.get(CV_CAP_PROP_FRAME_COUNT);
     double frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
     DLOG(INFO) << "Frame count: " << frameCount;
     DLOG(INFO) << "Start frame no: " << frameNo;
+
+    // display initialzation
+    setupDisplay(argv[1], argv[2], argv[3]);
 
     // main loop
     DLOG(INFO) << "main loop";
@@ -109,7 +117,7 @@ int main(int argc, char *argv[])
     char outputFilenameBuffer[1024];
     while(frameNo < frameCount){
         DLOG(INFO) << "FrameNo " << frameNo;
-        cout << "FrameNo " << frameNo << "[ " << ((float)frameNo/(float)frameCount*100.0f) << "%]" << endl;
+        updateDisplay(frameNo, ((float)frameNo/(float)frameCount*100.0f));
 
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
@@ -151,5 +159,46 @@ int main(int argc, char *argv[])
     videoSrc.release();
 
     DLOG(INFO) << "Execution finished";
+    endwin();
     return 0;
+}
+
+void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
+    char buffer[1000];
+    initscr();
+    cbreak();
+    noecho();
+
+    sprintf(buffer, "Model file: %s", _model);
+    mwprintw(3, 3, buffer);
+
+    sprintf(buffer, "Input video file: %s", _inputVideo);
+    mwprintw(5, 3, buffer);
+
+    sprintf(buffer, "Output folder: %s", _outputFolder);
+    mwprintw(7, 3, buffer);
+
+    // make some kind of progress bar
+
+    refresh();
+}
+
+void updateDisplay(int _frame, float _perc){
+    // update display with information
+    char buffer[1000];
+    int rows, cols;
+    getmaxyx(stdscr, rows, cols); // will use it later
+
+    move(9, 5);
+    addch('[');
+    for(int runner = 0; runner < _perc; runner+=10 )
+        addch('#');
+    for(;runner < 100; runner += 10)
+        addch(' ');
+    addch('] ');
+    sprintf(buffer, " %.2f [%d frame]", _perc, _frame);
+    printw(buffer);
+
+    refresh();
+    //getch(); // not needed - cbreak and system takes care of the rest
 }

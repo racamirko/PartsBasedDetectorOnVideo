@@ -18,7 +18,7 @@ QMAKE_CXXFLAGS += -std=c++0x
 
 INCLUDEPATH += /usr/local/include /home/raca/repo/outside_projects/PartsBasedDetector/include
 
-LIBS += -L/usr/lib -L/usr/local/lib -lPartsBasedDetector -lopencv_core -lopencv_highgui -lglog -lboost_filesystem -lboost_system
+LIBS += -L/usr/lib -L/usr/local/lib -lPartsBasedDetector -lopencv_core -lopencv_highgui -lglog -lboost_filesystem -lboost_system -lncurses
 
 SOURCES += main.cpp \
     outputFormat.cpp \
