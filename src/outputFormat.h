@@ -42,6 +42,10 @@
 #include <iostream>
 #include <Candidate.hpp>
 
+typedef enum { FT_BBOX_BRIEF, FT_FULL_OUTPUT } enumFormatType;
+
+extern enumFormatType gOutputFormat;
+
 std::ostream& operator<<(std::ostream& _stream, const vectorCandidate& _vecCandidates);
 
 #endif // OUTPUTFORMAT_H

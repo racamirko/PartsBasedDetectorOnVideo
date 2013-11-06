@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     vectorCandidate candidates;
     Mat curFrameIm;
     char outputFilenameBuffer[1024];
-    while(frameNo < frameCount){
+    while(frameNo < 3) {//frameCount){
         DLOG(INFO) << "FrameNo " << frameNo;
         cout << "FrameNo " << frameNo << endl;
 
@@ -116,18 +116,24 @@ int main(int argc, char *argv[])
         videoSrc >> curFrameIm;
 
         pbd.detect(curFrameIm, depth, candidates);
+        gOutputFormat = FT_BBOX_BRIEF;
+        DLOG(INFO) << "Found original: " << candidates;
         if(mirroring){
             vectorCandidate mirroredCandidates;
             flip(curFrameIm, curFrameIm, 1); // flip around y-axis
             pbd.detect(curFrameIm, depth, mirroredCandidates);
+            DLOG(INFO) << "Found flipped: " << mirroredCandidates;
             flipHorizontaly(mirroredCandidates, curFrameIm.size);
+            DLOG(INFO) << "After flipping: " << mirroredCandidates;
             candidates.insert(candidates.end(), mirroredCandidates.begin(), mirroredCandidates.end());
         }
 
         Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
+        DLOG(INFO) << "Final all detections" << candidates;
         // output
         sprintf(outputFilenameBuffer, outputFilePattern.c_str(), (int) frameNo);
         ofstream outFile(outputFilenameBuffer);
+        gOutputFormat = FT_FULL_OUTPUT;
         outFile << candidates;
 
         // cleanup

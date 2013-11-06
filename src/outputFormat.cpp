@@ -39,15 +39,26 @@
 #include "outputFormat.h"
 #include <iomanip>
 
+enumFormatType gOutputFormat = FT_FULL_OUTPUT;
+
 std::ostream& operator<<(std::ostream& _stream, const vectorCandidate& _vecCandidates){
     // format [ frameNo, compNo, mixtureNo, score (.4f), comp1_x1 (.2f), comp1_y1, comp1_x2, comp1_y2 ...]
     for( auto& c : _vecCandidates ){
-        _stream << "0, " << c.parts().size() << ", " << c.component() << ", "
-                << std::setprecision(4) << c.score();
-        // sub-parts
-        _stream << std::setprecision(2);
-        for( const cv::Rect& r : c.parts() )
-            _stream << ", " << r.x << ", " << r.y << ", " << r.x+r.width << ", " << r.y+r.height;
-        _stream << std::endl;
+        switch(gOutputFormat){
+            case FT_FULL_OUTPUT:
+                _stream << "0, " << c.parts().size() << ", " << c.component() << ", "
+                        << std::setprecision(4) << c.score();
+                // sub-parts
+                _stream << std::setprecision(2);
+                for( const cv::Rect& r : c.parts() )
+                    _stream << ", " << r.x << ", " << r.y << ", " << r.x+r.width << ", " << r.y+r.height;
+                _stream << std::endl;
+                break;
+            case FT_BBOX_BRIEF:
+                cv::Rect bBox = c.boundingBox();
+                _stream << "[ {" << c.component() << " = " << std::setprecision(4) << c.score() <<"}, " << bBox.x << ", " << bBox.y << ", " << bBox.x+bBox.width << ", " << bBox.y+bBox.height << "]" << std::endl;
+        }
     }
 }
+
+
