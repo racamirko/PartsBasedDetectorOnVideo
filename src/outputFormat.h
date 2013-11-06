@@ -32,7 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  *  File:    outputFormat.h
- *  Author:  Mirko Raca
+ *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: November 6, 2013
  */
 

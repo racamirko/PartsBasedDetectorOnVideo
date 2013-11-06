@@ -31,8 +31,8 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    COutputWriter.h
- *  Author:  Mirko Raca
+ *  File:    outputFormat.cpp
+ *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: November 6, 2013
  */
 
