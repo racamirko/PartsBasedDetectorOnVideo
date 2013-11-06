@@ -28,12 +28,14 @@
 #endif
 
 #include "outputFormat.h"
+#include "mirrorUtils.h"
 
 using namespace cv;
 using namespace std;
 
 #define OUTPUT_FILENAME_FORMAT "detection_frame%06d.txt"
 #define DEFAULT_NMS_THRESHOLD 0.3f
+#define DEFAULT_MIRRORING true
 
 int main(int argc, char *argv[])
 {
@@ -45,13 +47,16 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    // determine the type of model to read
+    // process variables
     boost::scoped_ptr<Model> model;
     float nmsThreshold = DEFAULT_NMS_THRESHOLD;
+    bool mirroring = DEFAULT_MIRRORING;
+
     if( argc >= 5 ){
         nmsThreshold = atof(argv[4]);
     }
 
+    // determine the type of model to read
     string ext = boost::filesystem::path(argv[1]).extension().string();
     if (ext.compare(".xml") == 0 || ext.compare(".yaml") == 0) {
         model.reset(new FileStorageModel);
@@ -109,7 +114,16 @@ int main(int argc, char *argv[])
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         videoSrc >> curFrameIm;
+
         pbd.detect(curFrameIm, depth, candidates);
+        if(mirroring){
+            vectorCandidate mirroredCandidates;
+            flip(curFrameIm, curFrameIm, 1); // flip around y-axis
+            pbd.detect(curFrameIm, depth, mirroredCandidates);
+            flipHorizontaly(mirroredCandidates, curFrameIm.size);
+            candidates.insert(candidates.end(), mirroredCandidates.begin(), mirroredCandidates.end());
+        }
+
         Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
         // output
         sprintf(outputFilenameBuffer, outputFilePattern.c_str(), (int) frameNo);

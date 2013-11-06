@@ -41,6 +41,8 @@
 void flipHorizontaly(vectorCandidate& _candidates, cv::Mat::MSize _imageSize){
     int width = _imageSize.p[1]; // TODO: check
     for( Candidate& c : _candidates ){
-        // do something
+        for( cv::Rect& r : c.parts() )
+            r.x = width - (r.x + r.width);
+        c.setComponent(-c.component());
     }
 }

@@ -31,10 +31,11 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    COutputWriter.h
+ *  File:    outputFormat.h
  *  Author:  Mirko Raca
  *  Created: November 6, 2013
  */
+
 #ifndef OUTPUTFORMAT_H
 #define OUTPUTFORMAT_H
 
