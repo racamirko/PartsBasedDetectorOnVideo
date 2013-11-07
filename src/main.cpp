@@ -107,6 +107,9 @@ int main(int argc, char *argv[])
     DLOG(INFO) << "Frame count: " << frameCount;
     DLOG(INFO) << "Start frame no: " << frameNo;
 
+    // DEBUG
+    // frameCount = 10;
+
     // display initialzation
     setupDisplay(argv[1], argv[2], argv[3]);
 
@@ -164,41 +167,51 @@ int main(int argc, char *argv[])
 }
 
 void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
-    char buffer[1000];
     initscr();
     cbreak();
     noecho();
 
-    sprintf(buffer, "Model file: %s", _model);
-    mwprintw(3, 3, buffer);
+    mvprintw(3, 3, "Model file: ");
+    mvprintw(3, 25, boost::filesystem::path(_model).filename().c_str());
 
-    sprintf(buffer, "Input video file: %s", _inputVideo);
-    mwprintw(5, 3, buffer);
+    mvprintw(4, 3, "Input video file: ");
+    mvprintw(4, 25, boost::filesystem::path(_inputVideo).filename().c_str());
 
-    sprintf(buffer, "Output folder: %s", _outputFolder);
-    mwprintw(7, 3, buffer);
-
-    // make some kind of progress bar
+    mvprintw(5, 3, "Output folder: ");
+    mvprintw(5, 25, boost::filesystem::path(_outputFolder).filename().c_str());
 
     refresh();
 }
 
 void updateDisplay(int _frame, float _perc){
     // update display with information
-    char buffer[1000];
     int rows, cols;
     getmaxyx(stdscr, rows, cols); // will use it later
+    float runnerStep = 100.0f/((float)cols-40);
 
-    move(9, 5);
+    move(10, 5);
     addch('[');
-    for(int runner = 0; runner < _perc; runner+=10 )
-        addch('#');
-    for(;runner < 100; runner += 10)
+    float runner; int change = 0;
+    for(runner = 0; runner < _perc; runner+=runnerStep ){
+        switch( change % 4 ){
+            case 0:
+                addch('.');
+                break;
+            case 1:
+                addch('o');
+                break;
+            case 2:
+                addch('O');
+                break;
+            case 3:
+                addch('o');
+                break;
+        }
+        change++;
+    }
+    for(;runner < 100.0f; runner += runnerStep)
         addch(' ');
-    addch('] ');
-    sprintf(buffer, " %.2f [%d frame]", _perc, _frame);
-    printw(buffer);
+    printw("] %.2f% [Frame #%d]", _perc, _frame);
 
     refresh();
-    //getch(); // not needed - cbreak and system takes care of the rest
 }
