@@ -13,6 +13,7 @@
 
 #include <glog/logging.h>
 #include <boost/filesystem.hpp>
+#include <time.h>
 #include <stdio.h>
 #include <fstream>
 #include <ncurses.h>
@@ -40,7 +41,7 @@ using namespace std;
 #define DEFAULT_RESUME false
 
 void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
-void updateDisplay(int _frame, float _perc);
+void updateDisplay(int _frame, float _perc, double _time);
 
 int main(int argc, char *argv[])
 {
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
     DLOG(INFO) << "Start frame no: " << frameNo;
 
     // DEBUG
-    // frameCount = 10;
+//    frameCount = 100;
 
     // display initialzation
     setupDisplay(argv[1], argv[2], argv[3]);
@@ -127,9 +128,11 @@ int main(int argc, char *argv[])
     vectorCandidate candidates;
     Mat curFrameIm;
     char outputFilenameBuffer[1024];
+    clock_t timeElapsed = clock();
     while(frameNo < frameCount){
         DLOG(INFO) << "FrameNo " << frameNo;
-        updateDisplay(frameNo, ((float)frameNo/(float)frameCount*100.0f));
+        updateDisplay(frameNo, ((float)frameNo/(float)frameCount*100.0f), (double) ( clock() - timeElapsed )/CLOCKS_PER_SEC );
+        timeElapsed = clock();
 
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
@@ -184,6 +187,12 @@ void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
     initscr();
     cbreak();
     noecho();
+    int rows, cols;
+    getmaxyx(stdscr, rows, cols); // will use it later
+
+    attron(A_BOLD);
+    mvprintw(1, cols/2-19, "[[ PartsBasedDetector (onVideo) v1.0 ]]");
+    attroff(A_BOLD);
 
     mvprintw(3, 3, "Model file: ");
     mvprintw(3, 25, boost::filesystem::path(_model).filename().c_str());
@@ -197,7 +206,7 @@ void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
     refresh();
 }
 
-void updateDisplay(int _frame, float _perc){
+void updateDisplay(int _frame, float _perc, double _time){
     // update display with information
     int rows, cols;
     getmaxyx(stdscr, rows, cols); // will use it later
@@ -205,6 +214,7 @@ void updateDisplay(int _frame, float _perc){
 
     move(10, 5);
     addch('[');
+    attron(A_BOLD);
     float runner; int change = 0;
     for(runner = 0; runner < _perc; runner+=runnerStep ){
         switch( change % 4 ){
@@ -225,7 +235,10 @@ void updateDisplay(int _frame, float _perc){
     }
     for(;runner < 100.0f; runner += runnerStep)
         addch(' ');
+    attroff(A_BOLD);
     printw("] %.2f% [Frame #%d]", _perc, _frame);
+    move(11, cols/2 - 3);
+    printw("TPF: %.2f sec", _time);
 
     refresh();
 }
