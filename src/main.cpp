@@ -192,7 +192,7 @@ void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
     mvprintw(4, 25, boost::filesystem::path(_inputVideo).filename().c_str());
 
     mvprintw(5, 3, "Output folder: ");
-    mvprintw(5, 25, boost::filesystem::path(_outputFolder).filename().c_str());
+    mvprintw(5, 25, boost::filesystem::path(_outputFolder).leaf().c_str());
 
     refresh();
 }
