@@ -37,6 +37,7 @@ using namespace std;
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_NMS_THRESHOLD 0.3f
 #define DEFAULT_MIRRORING true
+#define DEFAULT_RESUME false
 
 void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
 void updateDisplay(int _frame, float _perc);
@@ -47,17 +48,25 @@ int main(int argc, char *argv[])
     DLOG(INFO) << "Execution started";
 
     if (argc < 4) {
-        printf("Usage: PartsBasedDetectorOnVideo model_file video_file output_folder [nmsThreshold]\n");
+        printf("Usage: PartsBasedDetectorOnVideo model_file video_file output_folder [-r] [nmsThreshold]\n");
         exit(-1);
     }
 
     // process variables
     boost::scoped_ptr<Model> model;
     float nmsThreshold = DEFAULT_NMS_THRESHOLD;
-    bool mirroring = DEFAULT_MIRRORING;
+    bool optMirroring = DEFAULT_MIRRORING;
+    bool optResume = DEFAULT_RESUME;
 
     if( argc >= 5 ){
-        nmsThreshold = atof(argv[4]);
+        if(strcmp(argv[4], "-r") == 0){
+            optResume = true;
+            DLOG(INFO) << "Resume flag: ON";
+        }
+    }
+
+    if( argc >= 6 ){
+        nmsThreshold = atof(argv[5]);
     }
 
     // determine the type of model to read
@@ -125,13 +134,19 @@ int main(int argc, char *argv[])
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         videoSrc >> curFrameIm;
+        sprintf(outputFilenameBuffer, outputFilePattern.c_str(), (int) frameNo);
+
+        if( optResume ){
+            if(boost::filesystem::exists(outputFilenameBuffer))
+                continue;
+        }
 
         pbd.detect(curFrameIm, depth, candidates);
 #ifndef NDEBUG
         gOutputFormat = FT_BBOX_BRIEF;
 #endif
         DLOG(INFO) << "Found original: " << candidates;
-        if(mirroring){
+        if(optMirroring){
             vectorCandidate mirroredCandidates;
             flip(curFrameIm, curFrameIm, 1); // flip around y-axis
             pbd.detect(curFrameIm, depth, mirroredCandidates);
@@ -144,7 +159,6 @@ int main(int argc, char *argv[])
         Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
         DLOG(INFO) << "Final all detections" << candidates;
         // output
-        sprintf(outputFilenameBuffer, outputFilePattern.c_str(), (int) frameNo);
         ofstream outFile(outputFilenameBuffer);
 #ifndef NDEBUG
         gOutputFormat = FT_FULL_OUTPUT;
