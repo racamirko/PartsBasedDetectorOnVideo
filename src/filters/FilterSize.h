@@ -40,11 +40,14 @@
 #define FILTERSIZE_H
 
 #include "GenericFilter.h"
+#include <opencv2/core/core.hpp>
 
 class FilterSize : public GenericFIlter
 {
+protected:
+    cv::Size2f maxSize;
 public:
-    FilterSize();
+    FilterSize( cv::Size2f _maxSize );
     void process(vectorCandidate& _candidates);
 };
 

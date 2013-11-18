@@ -38,10 +38,23 @@
 
 #include "FilterSize.h"
 
-FilterSize::FilterSize(){
+#include "globalIncludes.h"
+#include <algorithm>
 
+FilterSize::FilterSize(cv::Size2f _maxSize )
+    : maxSize(_maxSize)
+{
+    DLOG(INFO) << "Created FilterSize [" << maxSize.width << ", " << maxSize.height << "]";
 }
 
 void FilterSize::process(vectorCandidate& _candidates){
-
+    vectorCandidate tmpResult;
+    for( Candidate& curCandidate : _candidates ){
+        cv::Rect rect = curCandidate.boundingBox();
+        if( rect.width > maxSize.width || rect.height > maxSize.height )
+            continue;
+        tmpResult.push_back(curCandidate);
+    }
+    _candidates.clear();
+    std::copy(tmpResult.begin(), tmpResult.end(), std::back_inserter(_candidates));
 }
