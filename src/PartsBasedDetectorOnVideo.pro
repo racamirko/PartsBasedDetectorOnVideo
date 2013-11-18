@@ -29,4 +29,5 @@ HEADERS += \
     outputFormat.h \
     mirrorUtils.h \
     filters/GenericFilter.h \
-    filters/FilterSize.h
+    filters/FilterSize.h \
+    globalIncludes.h

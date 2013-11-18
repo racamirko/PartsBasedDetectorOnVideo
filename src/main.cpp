@@ -42,7 +42,7 @@
  *  Created: November 5, 2013
  */
 
-#include <glog/logging.h>
+#include "globalIncludes.h"
 #include <boost/filesystem.hpp>
 #include <time.h>
 #include <stdio.h>
