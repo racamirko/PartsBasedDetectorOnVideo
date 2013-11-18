@@ -68,7 +68,7 @@ using namespace std;
 
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_NMS_THRESHOLD 0.3f
-#define DEFAULT_MIRRORING true
+#define DEFAULT_MIRRORING false
 #define DEFAULT_RESUME false
 
 void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
