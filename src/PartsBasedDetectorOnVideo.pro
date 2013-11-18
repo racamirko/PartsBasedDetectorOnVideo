@@ -22,8 +22,11 @@ LIBS += -L/usr/lib -L/usr/local/lib -lPartsBasedDetector -lopencv_core -lopencv_
 
 SOURCES += main.cpp \
     outputFormat.cpp \
-    mirrorUtils.cpp
+    mirrorUtils.cpp \
+    filters/FilterSize.cpp
 
 HEADERS += \
     outputFormat.h \
-    mirrorUtils.h
+    mirrorUtils.h \
+    filters/GenericFilter.h \
+    filters/FilterSize.h
