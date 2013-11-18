@@ -48,12 +48,16 @@
 #include <stdio.h>
 #include <fstream>
 #include <ncurses.h>
+#include <vector>
 
 #include <opencv2/highgui/highgui.hpp>
 
 #include <PartsBasedDetector.hpp>
 #include <Candidate.hpp>
 #include <FileStorageModel.hpp>
+
+#include "filters/GenericFilter.h"
+#include "filters/FilterSize.h"
 
 #define WITH_MATLABIO
 #ifdef WITH_MATLABIO
@@ -134,6 +138,8 @@ int main(int argc, char *argv[])
     Mat_<float> depth; // we don't have one for the video, so it's just a dummy variable
     PartsBasedDetector<float> pbd;
     pbd.distributeModel(*model);
+    std::vector<GenericFilter*> postFilters;
+    postFilters.push_back(new FilterSize(Size2f(140,140))); // TODO: exclude the hard-coding for a parameter
 
     // load video sequence
     VideoCapture videoSrc((string)argv[2]);
@@ -190,6 +196,10 @@ int main(int argc, char *argv[])
             candidates.insert(candidates.end(), mirroredCandidates.begin(), mirroredCandidates.end());
         }
 
+        for( GenericFilter*& curFilter : postFilters)
+            curFilter->process(candidates);
+
+        // note: this can be a post-filter as well
         Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
         DLOG(INFO) << "Final all detections" << candidates;
         // output
