@@ -75,8 +75,13 @@ using namespace std;
 #define DEFAULT_MIRRORING false
 #define DEFAULT_RESUME false
 
-void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
-void updateDisplay(int _frame, float _perc, double _time);
+#ifdef NDEBUG
+    void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
+    void updateDisplay(int _frame, float _perc, double _time);
+#else
+    void updateDisplayDebug(int _frame, float _perc, double _time);
+    void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder);
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -158,8 +163,11 @@ int main(int argc, char *argv[])
 //    frameCount = 100;
 
     // display initialzation
-    setupDisplay(argv[1], argv[2], argv[3]);
-
+#ifdef NDEBUG
+    setupDisplay(argv[1], argv[2], argv[3]); // release
+#else
+    setupDisplayDebug(argv[1], argv[2], argv[3]); // debug
+#endif
     // main loop
     DLOG(INFO) << "main loop";
     vectorCandidate candidates;
@@ -168,7 +176,11 @@ int main(int argc, char *argv[])
     clock_t timeElapsed = clock();
     while(frameNo < frameCount){
         DLOG(INFO) << "FrameNo " << frameNo;
+#ifdef NDEBUG
         updateDisplay(frameNo, ((float)frameNo/(float)frameCount*100.0f), (double) ( clock() - timeElapsed )/CLOCKS_PER_SEC );
+#else
+        updateDisplayDebug(frameNo, ((float)frameNo/(float)frameCount*100.0f), (double) ( clock() - timeElapsed )/CLOCKS_PER_SEC );
+#endif
         timeElapsed = clock();
 
         candidates.clear();
@@ -282,4 +294,19 @@ void updateDisplay(int _frame, float _perc, double _time){
     printw("TPF: %.2f sec", _time);
 
     refresh();
+}
+
+void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder){
+    DLOG(INFO) << "Model file: " << _model;
+    cout << "Model file: " << _model << endl;
+
+    DLOG(INFO) << "Input video: " << _inputVideo;
+    cout  << "Input video: " << _inputVideo << endl;
+
+    DLOG(INFO) << "Output folder: " << _outputFolder;
+    cout << "Output folder: " << _outputFolder << endl;
+}
+
+void updateDisplayDebug(int _frame, float _perc, double _time){
+    DLOG(INFO) << "Frame no: " << _frame << "[" << _perc << "%] in TPF: "  << _time;
 }
