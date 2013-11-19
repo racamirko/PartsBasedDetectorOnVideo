@@ -78,9 +78,11 @@ using namespace std;
 #ifdef NDEBUG
     void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
     void updateDisplay(int _frame, float _perc, double _time);
+    #define FRAME_LIMIT frameCount
 #else
     void updateDisplayDebug(int _frame, float _perc, double _time);
     void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder);
+    #define FRAME_LIMIT 200
 #endif
 
 int main(int argc, char *argv[])
@@ -174,7 +176,7 @@ int main(int argc, char *argv[])
     Mat curFrameIm;
     char outputFilenameBuffer[1024];
     clock_t timeElapsed = clock();
-    while(frameNo < frameCount){
+    while(frameNo < FRAME_LIMIT){
         DLOG(INFO) << "FrameNo " << frameNo;
 #ifdef NDEBUG
         updateDisplay(frameNo, ((float)frameNo/(float)frameCount*100.0f), (double) ( clock() - timeElapsed )/CLOCKS_PER_SEC );
