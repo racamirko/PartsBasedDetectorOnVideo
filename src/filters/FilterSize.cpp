@@ -49,25 +49,27 @@ FilterSize::FilterSize(cv::Size2f _maxSize )
 
 void FilterSize::process(vectorCandidate& _candidates){
     vectorCandidate tmpResult;
-    // DBG
+#ifndef NDEBUG
+    DLOG(INFO) << "Originaly " << _candidates.size() << " candidates";
     cv::Rect minSize = cv::Rect(0,0,1000,1000);
-    // END DBG
+#endif
 
     for( Candidate& curCandidate : _candidates ){
         cv::Rect rect = curCandidate.boundingBox();
-        // dbg
+#ifndef NDEBUG
         if( rect.height < minSize.height )
             minSize.height = rect.height;
         if( rect.width < minSize.width )
             minSize.width = rect.width;
-        // end dgb
+#endif
         if( rect.width > maxSize.width || rect.height > maxSize.height )
             continue;
         tmpResult.push_back(curCandidate);
     }
-    // dgb
+#ifndef NDEBUG
     DLOG(INFO) << "Minimum rect size is: " << minSize.width << ", " << minSize.height;
-    // end dgb
+    DLOG(INFO) << "Now " << tmpResult.size() << " candidates";
+#endif
     _candidates.clear();
     std::copy(tmpResult.begin(), tmpResult.end(), std::back_inserter(_candidates));
 }
