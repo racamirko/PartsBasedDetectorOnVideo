@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
             DLOG(INFO) << "After flipping: " << mirroredCandidates;
             candidates.insert(candidates.end(), mirroredCandidates.begin(), mirroredCandidates.end());
         }
-
+        // filter the results
         for( GenericFilter*& curFilter : postFilters)
             curFilter->process(candidates);
 
