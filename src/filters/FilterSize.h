@@ -42,7 +42,7 @@
 #include "GenericFilter.h"
 #include <opencv2/core/core.hpp>
 
-class FilterSize : public GenericFIlter
+class FilterSize : public GenericFilter
 {
 protected:
     cv::Size2f maxSize;
