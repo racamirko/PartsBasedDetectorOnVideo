@@ -298,6 +298,8 @@ void updateDisplay(int _frame, float _perc, double _time){
     refresh();
 }
 
+////////////  Debug verions of output which are QtCreator friendly \\\\\\\\\\\
+
 void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder){
     DLOG(INFO) << "Model file: " << _model;
     cout << "Model file: " << _model << endl;
