@@ -42,9 +42,9 @@
 #include <algorithm>
 
 FilterSize::FilterSize(cv::Size2f _maxSize )
-    : maxSize(_maxSize)
+    : mMaxSize(_maxSize)
 {
-    DLOG(INFO) << "Created FilterSize [" << maxSize.width << ", " << maxSize.height << "]";
+    DLOG(INFO) << "Created FilterSize [" << mMaxSize.width << ", " << mMaxSize.height << "]";
 }
 
 void FilterSize::process(vectorCandidate& _candidates){
@@ -62,7 +62,7 @@ void FilterSize::process(vectorCandidate& _candidates){
         if( rect.width < minSize.width )
             minSize.width = rect.width;
 #endif
-        if( rect.width > maxSize.width || rect.height > maxSize.height )
+        if( rect.width > mMaxSize.width || rect.height > mMaxSize.height )
             continue;
         tmpResult.push_back(curCandidate);
     }

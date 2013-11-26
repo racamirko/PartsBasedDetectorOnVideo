@@ -45,7 +45,7 @@
 class FilterSize : public GenericFilter
 {
 protected:
-    cv::Size2f maxSize;
+    cv::Size2f mMaxSize;
 public:
     FilterSize( cv::Size2f _maxSize );
     void process(vectorCandidate& _candidates);
