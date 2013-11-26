@@ -58,6 +58,7 @@
 
 #include "filters/GenericFilter.h"
 #include "filters/FilterSize.h"
+#include "filters/FilterNMS.h"
 
 #define WITH_MATLABIO
 #ifdef WITH_MATLABIO
