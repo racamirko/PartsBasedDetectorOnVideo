@@ -45,8 +45,10 @@
 
 class FilterNMS : GenericFilter
 {
+protected:
+    double mOverlap;
 public:
-    FilterNMS();
+    FilterNMS(double _overlap);
 
     void process(vectorCandidate& _candidates);
 };
