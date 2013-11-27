@@ -45,16 +45,22 @@
 #include <list>
 #include <algorithm>
 #include <utility>
+#include <string>
+#include <stdio.h>
 
 #include "globalIncludes.h"
 
 typedef std::pair<float, int> tOrderPair;
 bool compareSortOrder(const tOrderPair& _l, const tOrderPair& _r);
 void calculateOverlapMatrix( vectorCandidate& _candidates, cv::Mat & _overlapMat );
+float calcOverlap(const cv::Rect _r1, const cv::Rect _r2);
+std::string rect2str(const cv::Rect _r);
 
-FilterNMS::FilterNMS(double _overlap)
+FilterNMS::FilterNMS(float _overlap)
     : mOverlap(_overlap)
 {
+    if(_overlap > 1.0f)
+        _overlap /= 100.0f;
     DLOG(INFO) << "Created NMS filter for overlap greater then " << _overlap*100.0 << " %";
 }
 
@@ -66,20 +72,29 @@ void FilterNMS::process(vectorCandidate& _candidates){
     // sort all candidates in descending order based on the result
     vectorCandidate orderedCandidates;
     {
-        std::list<tOrderPair> resortBuffer; // <score, original_index>
+        std::list<Candidate> orderedCandidatesList; // just to control the memory consumption a bit. The result ends in orderedCandidates
+        std::vector<tOrderPair> resortBuffer; // <score, original_index>
         int idx = 0;
         for( const Candidate& cand : _candidates )
             resortBuffer.push_back( tOrderPair(cand.score(), idx++) );
         std::sort(resortBuffer.begin(), resortBuffer.end(), compareSortOrder);
         for( const tOrderPair& elem : resortBuffer )
-            orderedCandidates.push_back( _candidates.at(elem.second) );
+            orderedCandidatesList.push_back( _candidates.at(elem.second) );
+        std::copy(orderedCandidatesList.begin(), orderedCandidatesList.end(), std::back_inserter(orderedCandidates));
     }
     // create overlap matrix
     cv::Mat overlapMat = cv::Mat::zeros(orderedCandidates.size(), orderedCandidates.size(), CV_32FC1);
     calculateOverlapMatrix(orderedCandidates, overlapMat);
     // interate and insert only the top-scoring
     std::list<Candidate> outputResults;
-
+    {
+        for(int idx = 0; idx < orderedCandidates.size(); ++idx){
+            cv::Mat curRow = overlapMat.row(idx);
+            cv::Mat boolSelection = curRow > mOverlap;
+            if( cv::sum(boolSelection).val[0] == 0 )
+                outputResults.push_back(orderedCandidates[idx]);
+        }
+    }
     // re-insert the top-scoring candidates in the output vector
     _candidates.clear();
     std::copy(outputResults.begin(), outputResults.end(), std::back_inserter(_candidates));
@@ -94,18 +109,42 @@ bool compareSortOrder(const tOrderPair& _l, const tOrderPair& _r){
     return _l.first > _r.first;
 }
 
-void calculateOverlapMatrix( vectorCandidate& _candidates, cv::Mat & _overlapMat ){
+/*
+ *  Important to note that the overlapMat encodes the information
+ *      overlap.at<float>(x,y) = (x & y)/x;
+ *  The matrix will be 0.0 for any idx <= of the current outer idx
+ */
+void calculateOverlapMatrix( vectorCandidate& _candidates, cv::Mat &_overlapMat ){
     int outerIdx = 0;
-    for( const Candidate& _outerC : _candidtes ){
+    for( const Candidate& _outerC : _candidates ){
         int innerIdx = 0;
         for( const Candidate& _innerC : _candidates ){
-            _overlapMat.at<CV_32FC1>(outerIdx, innerIdx) = calcOverlap(_outerC.boundingBox(), _innerC.boundingBox());
+            if(innerIdx <= outerIdx)
+                continue;
+            _overlapMat.at<float>(outerIdx, innerIdx) = calcOverlap(_outerC.boundingBox(), _innerC.boundingBox());
             ++innerIdx;
         }
         ++outerIdx;
     }
+    DLOG(INFO) << "Overlap matrix: " << _overlapMat;
 }
 
+/*
+ * Overlap percentage from the "viewpoint" of the first rectangle.
+ *  (meaning, the intersection coverage area is devided by the area of the
+ *  of the first rectangle.
+ */
 float calcOverlap(const cv::Rect _r1, const cv::Rect _r2){
+    DLOG(INFO) << "Overlap between " << rect2str(_r1) << " and " << rect2str(_r2);
     cv::Rect intersection = _r1 & _r2;
+    DLOG(INFO) << "    is " << rect2str(intersection);
+    float overlapPct = (float)intersection.area()/(float)_r1.area();
+    DLOG(INFO) << "    in the pct of the first rect: " << overlapPct;
+    return overlapPct;
+}
+
+std::string rect2str(const cv::Rect _r){
+    char buffer[100];
+    sprintf(buffer, "[%d, %d, %d, %d]", _r.x, _r.y, _r.width, _r.height);
+    return std::string(buffer);
 }
