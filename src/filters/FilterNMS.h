@@ -43,7 +43,7 @@
 
 #include <filters/GenericFilter.h>
 
-class FilterNMS : GenericFilter
+class FilterNMS : public GenericFilter
 {
 protected:
     float mOverlap;

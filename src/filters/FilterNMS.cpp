@@ -90,7 +90,11 @@ void FilterNMS::process(vectorCandidate& _candidates){
     {
         for(int idx = 0; idx < orderedCandidates.size(); ++idx){
             cv::Mat curRow = overlapMat.row(idx);
-            cv::Mat boolSelection = curRow > mOverlap;
+            DLOG(INFO) << "Cur row:";
+            DLOG(INFO) << curRow;
+            cv::Mat boolSelection = curRow > mOverlap; // this is outputing 255 instead of "1" for true conditions. Not really a problem, but weird
+            DLOG(INFO) << "Cur binary selection";
+            DLOG(INFO) << boolSelection;
             if( cv::sum(boolSelection).val[0] == 0 )
                 outputResults.push_back(orderedCandidates[idx]);
         }
@@ -98,10 +102,6 @@ void FilterNMS::process(vectorCandidate& _candidates){
     // re-insert the top-scoring candidates in the output vector
     _candidates.clear();
     std::copy(outputResults.begin(), outputResults.end(), std::back_inserter(_candidates));
-
-    // warning system, to remove at the end
-    LOG(FATAL) << "Not implemented";
-    throw std::exception();
 }
 
 // made for descending sort
@@ -119,8 +119,9 @@ void calculateOverlapMatrix( vectorCandidate& _candidates, cv::Mat &_overlapMat 
     for( const Candidate& _outerC : _candidates ){
         int innerIdx = 0;
         for( const Candidate& _innerC : _candidates ){
-            if(innerIdx <= outerIdx)
-                continue;
+            if(innerIdx >= outerIdx){
+                break;
+            }
             _overlapMat.at<float>(outerIdx, innerIdx) = calcOverlap(_outerC.boundingBox(), _innerC.boundingBox());
             ++innerIdx;
         }

@@ -148,6 +148,7 @@ int main(int argc, char *argv[])
     pbd.distributeModel(*model);
     std::vector<GenericFilter*> postFilters;
     postFilters.push_back(new FilterSize(Size2f(140,140))); // TODO: exclude the hard-coding for a parameter
+    postFilters.push_back(new FilterNMS(0.3f));
 
     // load video sequence
     VideoCapture videoSrc((string)argv[2]);
@@ -214,8 +215,6 @@ int main(int argc, char *argv[])
         for( GenericFilter*& curFilter : postFilters)
             curFilter->process(candidates);
 
-        // note: this can be a post-filter as well
-        Candidate::nonMaximaSuppression(curFrameIm, candidates, nmsThreshold);
         DLOG(INFO) << "Final all detections" << candidates;
         // output
         ofstream outFile(outputFilenameBuffer);
