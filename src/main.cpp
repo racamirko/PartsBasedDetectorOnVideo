@@ -50,6 +50,7 @@
 #include <fstream>
 #include <ncurses.h>
 #include <vector>
+#include <algorithm>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -75,10 +76,9 @@ namespace po = boost::program_options;
 
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
-                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume);
+                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter);
 
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
-#define DEFAULT_NMS_THRESHOLD 0.3f
 #define DEFAULT_MIRRORING false
 #define DEFAULT_RESUME false
 
@@ -98,17 +98,18 @@ int main(int argc, char *argv[])
     DLOG(INFO) << "Execution started";
 
     // process variables
-    float nmsThreshold = DEFAULT_NMS_THRESHOLD;
+    float nmsThreshold = 0.0f;
     bool optMirroring = DEFAULT_MIRRORING;
     bool optResume = DEFAULT_RESUME;
     string outputFolder = "";
     string modelFile = "";
     string videoFile = "";
+    vector<float> sizeFilter;
 
     // general variables
     boost::scoped_ptr<Model> model;
 
-    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume);
+    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume, &sizeFilter);
 
     // determine the type of model to read
     string ext = boost::filesystem::path(modelFile).extension().string();
@@ -143,8 +144,10 @@ int main(int argc, char *argv[])
     PartsBasedDetector<float> pbd;
     pbd.distributeModel(*model);
     std::vector<GenericFilter*> postFilters;
-    postFilters.push_back(new FilterSize(Size2f(140,140))); // TODO: exclude the hard-coding for a parameter
-    postFilters.push_back(new FilterNMS(nmsThreshold));
+    if( sizeFilter.size() > 0 )
+        postFilters.push_back(new FilterSize(Size2f(sizeFilter[0],sizeFilter[1])));
+    if( nmsThreshold != 0.0f )
+        postFilters.push_back(new FilterNMS(nmsThreshold));
 
     // load video sequence
     VideoCapture videoSrc((string)argv[2]);
@@ -158,9 +161,6 @@ int main(int argc, char *argv[])
     double frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
     DLOG(INFO) << "Frame count: " << frameCount;
     DLOG(INFO) << "Start frame no: " << frameNo;
-
-    // DEBUG
-//    frameCount = 100;
 
     // display initialzation
 #ifdef NDEBUG
@@ -234,9 +234,14 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+/*
+ *  Code based on examples from
+ *      http://www.boost.org/doc/libs/1_46_0/doc/html/program_options/tutorial.html
+ *
+ */
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
-                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume)
+                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter)
 {
     po::options_description opts("Program parameters");
     opts.add_options()
@@ -245,8 +250,9 @@ void parseArguments( int _argc, char* _argv[], // input arguments
             ("video,v", po::value<string>(_videoFile),"Video file to analyse")
             ("dir,d", po::value<string>(_outputFolder),"Output folder")
             ("resume,r", "Resume option [default: false]")
-            ("nms,n", po::value<float>(_nmsThreshold)->default_value(DEFAULT_NMS_THRESHOLD), "NMS filter threshold, default 0.3 (30%)")
-            ("mirror", "Mirroring option - mirror the video image horizontally and process 2x (with corrections of the detections) [default: false]");
+            ("nms,n", po::value<float>(_nmsThreshold)->default_value(0.0f), "NMS filter threshold, percentage in the range 0.0-1.0, default O.0")
+            ("mirror", "Mirroring option - mirror the video image horizontally and process 2x (with corrections of the detections) [default: false]")
+            ("size,s", po::value< vector<float> >(_optSizeFilter), "Size filter. Eliminate all instances bigger then [width],[height]" );
     po::variables_map vm;
     po::store(po::parse_command_line(_argc, _argv, opts), vm);
     po::notify(vm);
@@ -274,6 +280,11 @@ void parseArguments( int _argc, char* _argv[], // input arguments
         exit(-3);
     }
 
+    if( vm.count("size") > 0 ){
+        _optSizeFilter->clear();
+        *_optSizeFilter = vm["size"].as< vector< float >>();
+    }
+
     *_optMirroring = (vm.count("mirror") > 0) ? true : false;
     *_optResume = (vm.count("resume") > 0) ? true : false;
 
@@ -282,7 +293,10 @@ void parseArguments( int _argc, char* _argv[], // input arguments
     LOG(INFO) << "Output folder: " << *_outputFolder;
     LOG(INFO) << "Resume option: " << (*_optResume ? "yes" : "no");
     LOG(INFO) << "Mirror option: " << (*_optMirroring ? "yes" : "no");
-    LOG(INFO) << "NMS threshold: " << *_nmsThreshold;
+    if( *_nmsThreshold == 0.0f )
+        LOG(INFO) << "NMS threshold: off";
+    else
+        LOG(INFO) << "NMS threshold:" << *_nmsThreshold ;
 }
 
 void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
