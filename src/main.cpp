@@ -50,7 +50,6 @@
 #include <fstream>
 #include <ncurses.h>
 #include <vector>
-#include <algorithm>
 
 #include <opencv2/highgui/highgui.hpp>
 
