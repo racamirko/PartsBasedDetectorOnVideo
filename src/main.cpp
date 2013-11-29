@@ -256,8 +256,26 @@ void parseArguments( int _argc, char* _argv[], // input arguments
         exit(0);
     }
 
-    *_optMirroring = (vm.count("mirror") > 0) ? true : DEFAULT_MIRRORING;
-    *_optResume = (vm.count("resume") > 0) ? true : DEFAULT_RESUME;
+    if( vm.count("model") == 0 ){
+        cout << "No model specified. Check --help for usage" << endl;
+        LOG(FATAL) << "No model specified.";
+        exit(-1);
+    }
+
+    if( vm.count("video") == 0 ){
+        cout << "No video specified. Check --help for usage" << endl;
+        LOG(FATAL) << "No video specified.";
+        exit(-2);
+    }
+
+    if( vm.count("dir") == 0 ){
+        cout << "No output folder specified. Check --help for usage" << endl;
+        LOG(FATAL) << "No output folder specified.";
+        exit(-3);
+    }
+
+    *_optMirroring = (vm.count("mirror") > 0) ? true : false;
+    *_optResume = (vm.count("resume") > 0) ? true : false;
 
     LOG(INFO) << "Model file: " << *_modelFile;
     LOG(INFO) << "Video file: " << *_videoFile;
@@ -329,6 +347,8 @@ void updateDisplay(int _frame, float _perc, double _time){
 
 ////////////  Debug verions of output which are QtCreator friendly \\\\\\\\\\\
 
+#ifndef NDEBUG
+
 void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder){
     DLOG(INFO) << "Model file: " << _model;
     cout << "Model file: " << _model << endl;
@@ -343,3 +363,5 @@ void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder){
 void updateDisplayDebug(int _frame, float _perc, double _time){
     DLOG(INFO) << "Frame no: " << _frame << "[" << _perc << "%] in TPF: "  << _time;
 }
+
+#endif
