@@ -44,6 +44,7 @@
 
 #include "globalIncludes.h"
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include <time.h>
 #include <stdio.h>
 #include <fstream>
@@ -70,6 +71,11 @@
 
 using namespace cv;
 using namespace std;
+namespace po = boost::program_options;
+
+void parseArguments( int _argc, char* _argv[], // input arguments
+                     std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
+                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume);
 
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_NMS_THRESHOLD 0.3f
@@ -91,30 +97,21 @@ int main(int argc, char *argv[])
     google::InitGoogleLogging(argv[0]);
     DLOG(INFO) << "Execution started";
 
-    if (argc < 4) {
-        printf("Usage: PartsBasedDetectorOnVideo model_file video_file output_folder [-r] [nmsThreshold]\n");
-        exit(-1);
-    }
-
     // process variables
-    boost::scoped_ptr<Model> model;
     float nmsThreshold = DEFAULT_NMS_THRESHOLD;
     bool optMirroring = DEFAULT_MIRRORING;
     bool optResume = DEFAULT_RESUME;
+    string outputFolder = "";
+    string modelFile = "";
+    string videoFile = "";
 
-    if( argc >= 5 ){
-        if(strcmp(argv[4], "-r") == 0){
-            optResume = true;
-            DLOG(INFO) << "Resume flag: ON";
-        }
-    }
+    // general variables
+    boost::scoped_ptr<Model> model;
 
-    if( argc >= 6 ){
-        nmsThreshold = atof(argv[5]);
-    }
+    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume);
 
     // determine the type of model to read
-    string ext = boost::filesystem::path(argv[1]).extension().string();
+    string ext = boost::filesystem::path(modelFile).extension().string();
     if (ext.compare(".xml") == 0 || ext.compare(".yaml") == 0) {
         model.reset(new FileStorageModel);
     }
@@ -128,7 +125,7 @@ int main(int argc, char *argv[])
         LOG(FATAL) << "Unsupported model format: " << ext.c_str();
         exit(-2);
     }
-    bool ok = model->deserialize(argv[1]);
+    bool ok = model->deserialize(modelFile);
     if (!ok) {
         printf("Error deserializing file\n");
         LOG(FATAL) << "Error deserializing file.";
@@ -136,11 +133,10 @@ int main(int argc, char *argv[])
     }
 
     // check output folder
-    string outputFilePattern = (string) argv[3];
-    if( outputFilePattern[outputFilePattern.length()-1] != '/' ){
-        outputFilePattern.append("/");
+    if( outputFolder[outputFolder.length()-1] != '/' ){
+        outputFolder.append("/");
     }
-    outputFilePattern.append(OUTPUT_FILENAME_FORMAT);
+    outputFolder.append(OUTPUT_FILENAME_FORMAT);
 
     // create the PartsBasedDetector and distribute the model parameters
     Mat_<float> depth; // we don't have one for the video, so it's just a dummy variable
@@ -148,7 +144,7 @@ int main(int argc, char *argv[])
     pbd.distributeModel(*model);
     std::vector<GenericFilter*> postFilters;
     postFilters.push_back(new FilterSize(Size2f(140,140))); // TODO: exclude the hard-coding for a parameter
-    postFilters.push_back(new FilterNMS(0.3f));
+    postFilters.push_back(new FilterNMS(nmsThreshold));
 
     // load video sequence
     VideoCapture videoSrc((string)argv[2]);
@@ -190,7 +186,7 @@ int main(int argc, char *argv[])
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         videoSrc >> curFrameIm;
-        sprintf(outputFilenameBuffer, outputFilePattern.c_str(), (int) frameNo);
+        sprintf(outputFilenameBuffer, outputFolder.c_str(), (int) frameNo);
 
         if( optResume ){
             if(boost::filesystem::exists(outputFilenameBuffer))
@@ -236,6 +232,39 @@ int main(int argc, char *argv[])
     DLOG(INFO) << "Execution finished";
     endwin();
     return 0;
+}
+
+void parseArguments( int _argc, char* _argv[], // input arguments
+                     std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
+                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume)
+{
+    po::options_description opts("Program parameters");
+    opts.add_options()
+            ("help,h","produce help message")
+            ("model,m", po::value<string>(_modelFile), "Model file to use. xml, mat or jaml format")
+            ("video,v", po::value<string>(_videoFile),"Video file to analyse")
+            ("dir,d", po::value<string>(_outputFolder),"Output folder")
+            ("resume,r", "Resume option [default: false]")
+            ("nms,n", po::value<float>(_nmsThreshold)->default_value(DEFAULT_NMS_THRESHOLD), "NMS filter threshold, default 0.3 (30%)")
+            ("mirror", "Mirroring option - mirror the video image horizontally and process 2x (with corrections of the detections) [default: false]");
+    po::variables_map vm;
+    po::store(po::parse_command_line(_argc, _argv, opts), vm);
+    po::notify(vm);
+
+    if( vm.count("help") ){
+        cout << opts << endl;
+        exit(0);
+    }
+
+    *_optMirroring = (vm.count("mirror") > 0) ? true : DEFAULT_MIRRORING;
+    *_optResume = (vm.count("resume") > 0) ? true : DEFAULT_RESUME;
+
+    LOG(INFO) << "Model file: " << *_modelFile;
+    LOG(INFO) << "Video file: " << *_videoFile;
+    LOG(INFO) << "Output folder: " << *_outputFolder;
+    LOG(INFO) << "Resume option: " << (*_optResume ? "yes" : "no");
+    LOG(INFO) << "Mirror option: " << (*_optMirroring ? "yes" : "no");
+    LOG(INFO) << "NMS threshold: " << *_nmsThreshold;
 }
 
 void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
