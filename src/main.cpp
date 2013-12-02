@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
         postFilters.push_back(new FilterNMS(nmsThreshold));
 
     // load video sequence
-    VideoCapture videoSrc((string)argv[2]);
+    VideoCapture videoSrc(videoFile);
     if( !videoSrc.isOpened() ){
         printf("Could not read video file\n");
         LOG(FATAL) << "Could not read video file: " << argv[2];
@@ -163,9 +163,9 @@ int main(int argc, char *argv[])
 
     // display initialzation
 #ifdef NDEBUG
-    setupDisplay(argv[1], argv[2], argv[3]); // release
+    setupDisplay(modelFile.c_str(), videoFile.c_str(), outputFolder.c_str()); // release
 #else
-    setupDisplayDebug(argv[1], argv[2], argv[3]); // debug
+    setupDisplayDebug(modelFile.c_str(), videoFile.c_str(), outputFolder.c_str()); // debug
 #endif
     // main loop
     DLOG(INFO) << "main loop";
