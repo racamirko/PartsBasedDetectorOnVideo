@@ -82,12 +82,12 @@ void parseArguments( int _argc, char* _argv[], // input arguments
 #define DEFAULT_RESUME false
 
 #ifdef NDEBUG
-    void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder);
+    void setupDisplay(const char* _model, const char* _inputVideo, const char* _outputFolder);
     void updateDisplay(int _frame, float _perc, double _time);
     #define FRAME_LIMIT frameCount
 #else
     void updateDisplayDebug(int _frame, float _perc, double _time);
-    void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder);
+    void setupDisplayDebug(const char* _model, const char* _inputVideo, const char* _outputFolder);
     #define FRAME_LIMIT 200
 #endif
 
@@ -298,7 +298,7 @@ void parseArguments( int _argc, char* _argv[], // input arguments
         LOG(INFO) << "NMS threshold:" << *_nmsThreshold ;
 }
 
-void setupDisplay(char* _model, char* _inputVideo, char* _outputFolder){
+void setupDisplay(const char* _model, const char* _inputVideo, const char* _outputFolder){
     initscr();
     cbreak();
     noecho();
@@ -358,11 +358,11 @@ void updateDisplay(int _frame, float _perc, double _time){
     refresh();
 }
 
-////////////  Debug verions of output which are QtCreator friendly \\\\\\\\\\\
+/*             Debug verions of output which are QtCreator friendly             */
 
 #ifndef NDEBUG
 
-void setupDisplayDebug(char* _model, char* _inputVideo, char* _outputFolder){
+void setupDisplayDebug(const char* _model, const char* _inputVideo, const char* _outputFolder){
     DLOG(INFO) << "Model file: " << _model;
     cout << "Model file: " << _model << endl;
 
