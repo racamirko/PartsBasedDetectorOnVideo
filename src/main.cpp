@@ -57,7 +57,7 @@
 #include <Candidate.hpp>
 #include <FileStorageModel.hpp>
 
-#include "filters/GenericFilter.h"
+#include "filters/GenericPostFilter.h"
 #include "filters/FilterSize.h"
 #include "filters/FilterNMS.h"
 

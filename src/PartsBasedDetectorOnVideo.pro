@@ -29,7 +29,7 @@ SOURCES += main.cpp \
 HEADERS += \
     outputFormat.h \
     mirrorUtils.h \
-    filters/GenericFilter.h \
     filters/FilterSize.h \
     globalIncludes.h \
-    filters/FilterNMS.h
+    filters/FilterNMS.h \
+    filters/GenericPostFilter.h

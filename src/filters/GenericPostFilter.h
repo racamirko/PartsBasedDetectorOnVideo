@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    GenericFilter.h
+ *  File:    GenericPostFilter.h
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: November 18, 2013
  */
@@ -42,7 +42,7 @@
 #include <PartsBasedDetector.hpp>
 #include <Candidate.hpp>
 
-class GenericFilter
+class GenericPostFilter
 {
 public:
     virtual void process(vectorCandidate& _candidates) = 0;

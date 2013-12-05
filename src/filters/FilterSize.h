@@ -39,10 +39,10 @@
 #ifndef FILTERSIZE_H
 #define FILTERSIZE_H
 
-#include "GenericFilter.h"
+#include "GenericPostFilter.h"
 #include <opencv2/core/core.hpp>
 
-class FilterSize : public GenericFilter
+class FilterSize : public GenericPostFilter
 {
 protected:
     cv::Size2f mMaxSize;

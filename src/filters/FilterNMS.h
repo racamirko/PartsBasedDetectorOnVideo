@@ -41,9 +41,9 @@
 #ifndef FILTERNMS_H
 #define FILTERNMS_H
 
-#include <filters/GenericFilter.h>
+#include <filters/GenericPostFilter.h>
 
-class FilterNMS : public GenericFilter
+class FilterNMS : public GenericPostFilter
 {
 protected:
     float mOverlap;
