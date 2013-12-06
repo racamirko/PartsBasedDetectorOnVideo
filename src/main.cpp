@@ -196,12 +196,14 @@ int main(int argc, char *argv[])
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         videoSrc >> curFrameIm;
+
         // check if already exists
         sprintf(outputFilenameBuffer, outputFolder.c_str(), (int) frameNo);
         if( optResume ){
             if(boost::filesystem::exists(outputFilenameBuffer))
                 continue;
         }
+
         // filter the image
         for( GenericPreFilter*& curFilter : preFilters ){
             curFilter->process(curFrameIm);
@@ -369,9 +371,9 @@ void updateDisplay(int _frame, float _perc, double _time){
     for(;runner < 100.0f; runner += runnerStep)
         addch(' ');
     attroff(A_BOLD);
-    printw("] %.2f% [Frame #%d]", _perc, _frame);
+    printw("] %3.2f% [Frame #%d]", _perc, _frame);
     move(11, cols/2 - 3);
-    printw("TPF: %.2f sec", _time);
+    printw("TPF: %2.2f sec", _time);
 
     refresh();
 }

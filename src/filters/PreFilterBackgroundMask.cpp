@@ -55,8 +55,7 @@ PreFilterBackgroundMask::PreFilterBackgroundMask(std::string _maskFilename){
 
 void PreFilterBackgroundMask::init(std::string _maskFilename){
     mFilterMask = imread(_maskFilename);
-    cvtColor(mFilterMask, mFilterMask, CV_BGR2GRAY);
-    mFilterMask = mFilterMask > 128; // binarize
+    mFilterMask = mFilterMask / 255.0f;
 }
 
 void PreFilterBackgroundMask::process(cv::Mat& _frame){
@@ -65,6 +64,5 @@ void PreFilterBackgroundMask::process(cv::Mat& _frame){
                    << mFilterMask.cols << ", " << mFilterMask.rows << "]";
         return;
     }
-    _frame = _frame & mFilterMask;
-    imshow("dbgwnd", _frame);
+    _frame = _frame.mul(mFilterMask);
 }
