@@ -66,4 +66,5 @@ void PreFilterBackgroundMask::process(cv::Mat& _frame){
         return;
     }
     _frame = _frame & mFilterMask;
+    imshow("dbgwnd", _frame);
 }

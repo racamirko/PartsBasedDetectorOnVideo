@@ -196,11 +196,15 @@ int main(int argc, char *argv[])
         candidates.clear();
         frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
         videoSrc >> curFrameIm;
+        // check if already exists
         sprintf(outputFilenameBuffer, outputFolder.c_str(), (int) frameNo);
-
         if( optResume ){
             if(boost::filesystem::exists(outputFilenameBuffer))
                 continue;
+        }
+        // filter the image
+        for( GenericPreFilter*& curFilter : preFilters ){
+            curFilter->process(curFrameIm);
         }
 
         pbd.detect(curFrameIm, depth, candidates);
