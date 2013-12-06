@@ -31,6 +31,8 @@ Program parameters:
                         [default: false]
   -s [ --size ] arg     Size filter. Eliminate all instances bigger then 
                         [width],[height]
+  -f [ --filter ] arg   Mask filter - binary image. White regions of the image 
+                        are going to be analyzed.
 ```
 
 
@@ -47,8 +49,6 @@ Used libraries
  * glog - google logging library
  * Boost::filesystem, system, program options
  * ncurses - for a nicer progress report
-
-Also, OpenCV as always.
 
 Contact
 -------
