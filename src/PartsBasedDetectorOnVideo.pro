@@ -25,7 +25,7 @@ SOURCES += main.cpp \
     mirrorUtils.cpp \
     filters/FilterSize.cpp \
     filters/FilterNMS.cpp \
-    filters/PreFilterBackgroundSub.cpp
+    filters/PreFilterBackgroundMask.cpp
 
 HEADERS += \
     outputFormat.h \
@@ -35,4 +35,5 @@ HEADERS += \
     filters/FilterNMS.h \
     filters/GenericPostFilter.h \
     filters/GenericPreFilter.h \
-    filters/PreFilterBackgroundSub.h
+    filters/PreFilterBackgroundSub.h \
+    filters/PreFilterBackgroundMask.h

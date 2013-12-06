@@ -37,8 +37,9 @@
  */
 
 #include "PreFilterBackgroundSub.h"
-
 #include "globalIncludes.h"
+#include <opencv2/video/background_segm.hpp>
+
 
 PreFilterBackgroundSub::PreFilterBackgroundSub(){
     DLOG(INFO) << "Created PreFilterBackgroundSub";
