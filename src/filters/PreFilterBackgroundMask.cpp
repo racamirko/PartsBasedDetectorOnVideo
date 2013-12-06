@@ -31,24 +31,39 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    PreFilterBackgroundSub.cpp
+ *  File:    PreFilterBackgroundMask.cpp
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: December 06, 2013
  */
 
-#include "PreFilterBackgroundSub.h"
+#include "PreFilterBackgroundMask.h"
 #include "globalIncludes.h"
-#include <opencv2/video/background_segm.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <string>
 
+using namespace cv;
 
-PreFilterBackgroundSub::PreFilterBackgroundSub(){
+PreFilterBackgroundMask::PreFilterBackgroundMask(){
     DLOG(INFO) << "Created PreFilterBackgroundSub";
 }
 
-void PreFilterBackgroundSub::init(cv::VideoCapture _videoSrc){
-
+PreFilterBackgroundMask::PreFilterBackgroundMask(std::string _maskFilename){
+    DLOG(INFO) << "Created PreFilterBackgroundSub with maskFile" << _maskFilename;
+    init(_maskFilename);
 }
 
-void PreFilterBackgroundSub::process(cv::Mat& _frame){
+void PreFilterBackgroundMask::init(std::string _maskFilename){
+    mFilterMask = imread(_maskFilename);
+    cvtColor(mFilterMask, mFilterMask, CV_BGR2GRAY);
+    mFilterMask = mFilterMask > 128; // binarize
+}
 
+void PreFilterBackgroundMask::process(cv::Mat& _frame){
+    if( _frame.rows != mFilterMask.rows || _frame.cols != mFilterMask.cols ){
+        LOG(ERROR) << "Filter and image sizes don't match! frame: [" << _frame.cols << ", " << _frame.rows << "] filter"
+                   << mFilterMask.cols << ", " << mFilterMask.rows << "]";
+        return;
+    }
+    _frame = _frame & mFilterMask;
 }

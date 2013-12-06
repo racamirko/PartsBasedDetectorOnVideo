@@ -44,7 +44,6 @@
 
 class GenericPreFilter {
 public:
-    virtual void init(cv::VideoCapture _videoSrc) = 0;
     virtual void process(cv::Mat& _frame) = 0;
 };
 

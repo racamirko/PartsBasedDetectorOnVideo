@@ -61,6 +61,7 @@
 #include "filters/GenericPostFilter.h"
 #include "filters/FilterSize.h"
 #include "filters/FilterNMS.h"
+#include "filters/PreFilterBackgroundMask.h"
 
 #define WITH_MATLABIO
 #ifdef WITH_MATLABIO
@@ -76,7 +77,8 @@ namespace po = boost::program_options;
 
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
-                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter);
+                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
+                     std::string* _optMaskFilter);
 
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_MIRRORING false
@@ -104,12 +106,13 @@ int main(int argc, char *argv[])
     string outputFolder = "";
     string modelFile = "";
     string videoFile = "";
+    string maskFilterFile = "";
     vector<float> sizeFilter;
 
     // general variables
     boost::scoped_ptr<Model> model;
 
-    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume, &sizeFilter);
+    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume, &sizeFilter, &maskFilterFile);
 
     // determine the type of model to read
     string ext = boost::filesystem::path(modelFile).extension().string();
@@ -158,7 +161,9 @@ int main(int argc, char *argv[])
 
     // pre filters
     std::vector<GenericPreFilter*> preFilters;
-
+    if( maskFilterFile.size() > 0 ){
+        preFilters.push_back( new PreFilterBackgroundMask(maskFilterFile) );
+    }
 
     // post filters
     std::vector<GenericPostFilter*> postFilters;
@@ -246,7 +251,8 @@ int main(int argc, char *argv[])
  */
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
-                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter)
+                     float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
+                     std::string* _optMaskFilter)
 {
     po::options_description opts("Program parameters");
     opts.add_options()
@@ -257,7 +263,8 @@ void parseArguments( int _argc, char* _argv[], // input arguments
             ("resume,r", "Resume option [default: false]")
             ("nms,n", po::value<float>(_nmsThreshold)->default_value(0.0f), "NMS filter threshold, percentage in the range 0.0-1.0, default O.0")
             ("mirror", "Mirroring option - mirror the video image horizontally and process 2x (with corrections of the detections) [default: false]")
-            ("size,s", po::value< vector<float> >(_optSizeFilter), "Size filter. Eliminate all instances bigger then [width],[height]" );
+            ("size,s", po::value< vector<float> >(_optSizeFilter), "Size filter. Eliminate all instances bigger then [width],[height]" )
+            ("filter,f", po::value<string>(_optMaskFilter), "Mask filter - binary image. White regions of the image are going to be analyzed.");
     po::variables_map vm;
     po::store(po::parse_command_line(_argc, _argv, opts), vm);
     po::notify(vm);
@@ -296,6 +303,7 @@ void parseArguments( int _argc, char* _argv[], // input arguments
     LOG(INFO) << "Model file: " << *_modelFile;
     LOG(INFO) << "Video file: " << *_videoFile;
     LOG(INFO) << "Output folder: " << *_outputFolder;
+    LOG(INFO) << "Mask filter file: " << *_optMaskFilter;
     LOG(INFO) << "Resume option: " << (*_optResume ? "yes" : "no");
     LOG(INFO) << "Mirror option: " << (*_optMirroring ? "yes" : "no");
     if( *_nmsThreshold == 0.0f )

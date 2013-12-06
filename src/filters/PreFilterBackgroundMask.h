@@ -31,22 +31,25 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    PreFilterBackgroundSub.h
+ *  File:    PreFilterBackgroundMask.h
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: December 06, 2013
  */
 
-#ifndef PREFILTERBACKGROUNDSUB_H
-#define PREFILTERBACKGROUNDSUB_H
+#ifndef PREFILTERBACKGROUNDMASK_H
+#define PREFILTERBACKGROUNDMASK_H
 
 #include "GenericPreFilter.h"
 
-class PreFilterBackgroundSub : public GenericPreFilter
+class PreFilterBackgroundMask : public GenericPreFilter
 {
+protected:
+    cv::Mat mFilterMask;
 public:
-    PreFilterBackgroundSub();
+    PreFilterBackgroundMask();
+    PreFilterBackgroundMask(std::string _maskFilename);
 
-    void init(cv::VideoCapture _videoSrc);
+    void init(std::string _maskFilename);
     void process(cv::Mat& _frame);
 
 };
