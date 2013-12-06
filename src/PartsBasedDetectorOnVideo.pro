@@ -32,4 +32,5 @@ HEADERS += \
     filters/FilterSize.h \
     globalIncludes.h \
     filters/FilterNMS.h \
-    filters/GenericPostFilter.h
+    filters/GenericPostFilter.h \
+    filters/GenericPreFilter.h

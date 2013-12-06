@@ -57,6 +57,7 @@
 #include <Candidate.hpp>
 #include <FileStorageModel.hpp>
 
+#include "filters/GenericPreFilter.h"
 #include "filters/GenericPostFilter.h"
 #include "filters/FilterSize.h"
 #include "filters/FilterNMS.h"
@@ -142,12 +143,6 @@ int main(int argc, char *argv[])
     Mat_<float> depth; // we don't have one for the video, so it's just a dummy variable
     PartsBasedDetector<float> pbd;
     pbd.distributeModel(*model);
-    std::vector<GenericFilter*> postFilters;
-    if( sizeFilter.size() > 0 )
-        postFilters.push_back(new FilterSize(Size2f(sizeFilter[0],sizeFilter[1])));
-    if( nmsThreshold != 0.0f )
-        postFilters.push_back(new FilterNMS(nmsThreshold));
-
     // load video sequence
     VideoCapture videoSrc(videoFile);
     if( !videoSrc.isOpened() ){
@@ -160,6 +155,17 @@ int main(int argc, char *argv[])
     double frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
     DLOG(INFO) << "Frame count: " << frameCount;
     DLOG(INFO) << "Start frame no: " << frameNo;
+
+    // pre filters
+    std::vector<GenericPreFilter*> preFilters;
+
+
+    // post filters
+    std::vector<GenericPostFilter*> postFilters;
+    if( sizeFilter.size() > 0 )
+        postFilters.push_back(new FilterSize(Size2f(sizeFilter[0],sizeFilter[1])));
+    if( nmsThreshold != 0.0f )
+        postFilters.push_back(new FilterNMS(nmsThreshold));
 
     // display initialzation
 #ifdef NDEBUG
@@ -207,7 +213,7 @@ int main(int argc, char *argv[])
             candidates.insert(candidates.end(), mirroredCandidates.begin(), mirroredCandidates.end());
         }
         // filter the results
-        for( GenericFilter*& curFilter : postFilters)
+        for( GenericPostFilter*& curFilter : postFilters)
             curFilter->process(candidates);
 
         DLOG(INFO) << "Final all detections" << candidates;
