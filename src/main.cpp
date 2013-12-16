@@ -57,6 +57,7 @@
 #include <Candidate.hpp>
 #include <FileStorageModel.hpp>
 
+
 #include "filters/GenericPreFilter.h"
 #include "filters/GenericPostFilter.h"
 #include "filters/FilterSize.h"
@@ -78,11 +79,12 @@ namespace po = boost::program_options;
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
                      float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
-                     std::string* _optMaskFilter);
+                     std::string* _optMaskFilter, float* _optModelThresh);
 
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_MIRRORING false
 #define DEFAULT_RESUME false
+#define DEFAULT_MODEL_THRESH -100.0f
 
 #ifdef NDEBUG
     void setupDisplay(const char* _model, const char* _inputVideo, const char* _outputFolder);
@@ -101,6 +103,7 @@ int main(int argc, char *argv[])
 
     // process variables
     float nmsThreshold = 0.0f;
+    float modelThreshold = DEFAULT_MODEL_THRESH;
     bool optMirroring = DEFAULT_MIRRORING;
     bool optResume = DEFAULT_RESUME;
     string outputFolder = "";
@@ -112,7 +115,7 @@ int main(int argc, char *argv[])
     // general variables
     boost::scoped_ptr<Model> model;
 
-    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume, &sizeFilter, &maskFilterFile);
+    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume, &sizeFilter, &maskFilterFile, &modelThreshold);
 
     // determine the type of model to read
     string ext = boost::filesystem::path(modelFile).extension().string();
@@ -134,6 +137,11 @@ int main(int argc, char *argv[])
         printf("Error deserializing file\n");
         LOG(FATAL) << "Error deserializing file.";
         exit(-3);
+    }
+
+    if( modelThreshold != DEFAULT_MODEL_THRESH ){
+        LOG(INFO) << "Setting model threshold to " << modelThreshold << ", instead of model default: " << model->thresh();
+        model->setThreshold(modelThreshold);
     }
 
     // check output folder
@@ -258,7 +266,7 @@ int main(int argc, char *argv[])
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
                      float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
-                     std::string* _optMaskFilter)
+                     std::string* _optMaskFilter, float* _optModelThresh)
 {
     po::options_description opts("Program parameters");
     opts.add_options()
@@ -270,7 +278,8 @@ void parseArguments( int _argc, char* _argv[], // input arguments
             ("nms,n", po::value<float>(_nmsThreshold)->default_value(0.0f), "NMS filter threshold, percentage in the range 0.0-1.0, default O.0")
             ("mirror", "Mirroring option - mirror the video image horizontally and process 2x (with corrections of the detections) [default: false]")
             ("size,s", po::value< vector<float> >(_optSizeFilter), "Size filter. Eliminate all instances bigger then [width],[height]" )
-            ("filter,f", po::value<string>(_optMaskFilter), "Mask filter - binary image. White regions of the image are going to be analyzed.");
+            ("filter,f", po::value<string>(_optMaskFilter), "Mask filter - binary image. White regions of the image are going to be analyzed.")
+            ("thresh,t", po::value<float>(_optModelThresh)->default_value(DEFAULT_MODEL_THRESH), "Theshold of the model. Default value is whatever is used in the model file");
     po::variables_map vm;
     po::store(po::parse_command_line(_argc, _argv, opts), vm);
     po::notify(vm);
@@ -312,6 +321,10 @@ void parseArguments( int _argc, char* _argv[], // input arguments
     LOG(INFO) << "Mask filter file: " << *_optMaskFilter;
     LOG(INFO) << "Resume option: " << (*_optResume ? "yes" : "no");
     LOG(INFO) << "Mirror option: " << (*_optMirroring ? "yes" : "no");
+    if( *_optModelThresh == DEFAULT_MODEL_THRESH )
+        LOG(INFO) << "Model threshold: [model default]";
+    else
+        LOG(INFO) << "Model threshold: " << *_optModelThresh;
     if( *_nmsThreshold == 0.0f )
         LOG(INFO) << "NMS threshold: off";
     else
