@@ -59,8 +59,8 @@ std::string rect2str(const cv::Rect _r);
 FilterNMS::FilterNMS(float _overlap)
     : mOverlap(_overlap)
 {
-    if(_overlap > 1.0f)
-        _overlap /= 100.0f;
+    if(mOverlap > 1.0f)
+        mOverlap /= 100.0f;
     DLOG(INFO) << "Created NMS filter for overlap greater then " << _overlap*100.0 << " %";
 }
 
