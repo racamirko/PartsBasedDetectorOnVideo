@@ -64,6 +64,10 @@
 #include "filters/FilterNMS.h"
 #include "filters/PreFilterBackgroundMask.h"
 
+#include "dataprovider/CGenericFrameProvider.h"
+#include "dataprovider/CVideoFrameProvider.h"
+#include "dataprovider/CProviderFactory.h"
+
 #define WITH_MATLABIO
 #ifdef WITH_MATLABIO
     #include <MatlabIOModel.hpp>
@@ -77,7 +81,7 @@ using namespace std;
 namespace po = boost::program_options;
 
 void parseArguments( int _argc, char* _argv[], // input arguments
-                     std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
+                     std::string* _modelFile, std::string* _outputFolder, std::string* _srcFilename, // output arguments
                      float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
                      std::string* _optMaskFilter, float* _optModelThresh);
 
@@ -87,12 +91,12 @@ void parseArguments( int _argc, char* _argv[], // input arguments
 #define DEFAULT_MODEL_THRESH -100.0f
 
 #ifdef NDEBUG
-    void setupDisplay(const char* _model, const char* _inputVideo, const char* _outputFolder);
+    void setupDisplay(const char* _model, const char* _srcFilename, const char* _outputFolder);
     void updateDisplay(int _frame, float _perc, double _time);
     #define FRAME_LIMIT frameCount
 #else
     void updateDisplayDebug(int _frame, float _perc, double _time);
-    void setupDisplayDebug(const char* _model, const char* _inputVideo, const char* _outputFolder);
+    void setupDisplayDebug(const char* _model, const char* _srcFilename, const char* _outputFolder);
     #define FRAME_LIMIT 200
 #endif
 
@@ -108,14 +112,14 @@ int main(int argc, char *argv[])
     bool optResume = DEFAULT_RESUME;
     string outputFolder = "";
     string modelFile = "";
-    string videoFile = "";
+    string srcFilename = "";
     string maskFilterFile = "";
     vector<float> sizeFilter;
 
     // general variables
     boost::scoped_ptr<Model> model;
 
-    parseArguments(argc, argv, &modelFile, &outputFolder, &videoFile, &nmsThreshold, &optMirroring, &optResume, &sizeFilter, &maskFilterFile, &modelThreshold);
+    parseArguments(argc, argv, &modelFile, &outputFolder, &srcFilename, &nmsThreshold, &optMirroring, &optResume, &sizeFilter, &maskFilterFile, &modelThreshold);
 
     // determine the type of model to read
     string ext = boost::filesystem::path(modelFile).extension().string();
@@ -155,15 +159,20 @@ int main(int argc, char *argv[])
     PartsBasedDetector<float> pbd;
     pbd.distributeModel(*model);
     // load video sequence
-    VideoCapture videoSrc(videoFile);
-    if( !videoSrc.isOpened() ){
-        printf("Could not read video file\n");
-        LOG(FATAL) << "Could not read video file: " << videoFile;
+    CGenericFrameProvider* pFrameSrc = NULL;
+    try{
+        pFrameSrc = CProviderFactory::getProvider(srcFilename);
+    } catch(std::runtime_error& error){
+        LOG(FATAL) << "Error opening file: " << error.what();
+        printf("Could not open frame source");
         endwin();
         exit(-4);
     }
-    double frameCount = videoSrc.get(CV_CAP_PROP_FRAME_COUNT);
-    double frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
+
+    double frameCount = pFrameSrc->getFrameCount();
+    double frameNo = pFrameSrc->getCurrentFrameNumber();
+
+
     DLOG(INFO) << "Frame count: " << frameCount;
     DLOG(INFO) << "Start frame no: " << frameNo;
 
@@ -182,9 +191,9 @@ int main(int argc, char *argv[])
 
     // display initialzation
 #ifdef NDEBUG
-    setupDisplay(modelFile.c_str(), videoFile.c_str(), outputFolder.c_str()); // release
+    setupDisplay(modelFile.c_str(), srcFilename.c_str(), outputFolder.c_str()); // release
 #else
-    setupDisplayDebug(modelFile.c_str(), videoFile.c_str(), outputFolder.c_str()); // debug
+    setupDisplayDebug(modelFile.c_str(), srcFilename.c_str(), outputFolder.c_str()); // debug
 #endif
     // main loop
     DLOG(INFO) << "main loop";
@@ -202,8 +211,8 @@ int main(int argc, char *argv[])
         timeElapsed = clock();
 
         candidates.clear();
-        frameNo = videoSrc.get(CV_CAP_PROP_POS_FRAMES);
-        videoSrc >> curFrameIm;
+        frameNo = pFrameSrc->getCurrentFrameNumber();
+        *pFrameSrc >> curFrameIm;
 
         // check if already exists
         sprintf(outputFilenameBuffer, outputFolder.c_str(), (int) frameNo);
@@ -251,7 +260,6 @@ int main(int argc, char *argv[])
 
     // cleanup
     DLOG(INFO) << "Cleanup part";
-    videoSrc.release();
 
     DLOG(INFO) << "Execution finished";
     endwin();
@@ -264,7 +272,7 @@ int main(int argc, char *argv[])
  *
  */
 void parseArguments( int _argc, char* _argv[], // input arguments
-                     std::string* _modelFile, std::string* _outputFolder, std::string* _videoFile, // output arguments
+                     std::string* _modelFile, std::string* _outputFolder, std::string* _srcFilename, // output arguments
                      float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
                      std::string* _optMaskFilter, float* _optModelThresh)
 {
@@ -272,7 +280,7 @@ void parseArguments( int _argc, char* _argv[], // input arguments
     opts.add_options()
             ("help,h","produce help message")
             ("model,m", po::value<string>(_modelFile), "Model file to use. xml, mat or jaml format")
-            ("video,v", po::value<string>(_videoFile),"Video file to analyse")
+            ("input,i", po::value<string>(_srcFilename),"Input, source for analysis (video/folder/image)")
             ("dir,d", po::value<string>(_outputFolder),"Output folder")
             ("resume,r", "Resume option [default: false]")
             ("nms,n", po::value<float>(_nmsThreshold)->default_value(0.0f), "NMS filter threshold, percentage in the range 0.0-1.0, default O.0")
@@ -295,9 +303,9 @@ void parseArguments( int _argc, char* _argv[], // input arguments
         exit(-1);
     }
 
-    if( vm.count("video") == 0 ){
-        cout << "No video specified. Check --help for usage" << endl;
-        LOG(FATAL) << "No video specified.";
+    if( vm.count("input") == 0 ){
+        cout << "No input specified. Check --help for usage" << endl;
+        LOG(FATAL) << "No input specified.";
         exit(-2);
     }
 
@@ -316,7 +324,7 @@ void parseArguments( int _argc, char* _argv[], // input arguments
     *_optResume = (vm.count("resume") > 0) ? true : false;
 
     LOG(INFO) << "Model file: " << *_modelFile;
-    LOG(INFO) << "Video file: " << *_videoFile;
+    LOG(INFO) << "Input path: " << *_srcFilename;
     LOG(INFO) << "Output folder: " << *_outputFolder;
     LOG(INFO) << "Mask filter file: " << *_optMaskFilter;
     LOG(INFO) << "Resume option: " << (*_optResume ? "yes" : "no");
@@ -331,7 +339,7 @@ void parseArguments( int _argc, char* _argv[], // input arguments
         LOG(INFO) << "NMS threshold:" << *_nmsThreshold ;
 }
 
-void setupDisplay(const char* _model, const char* _inputVideo, const char* _outputFolder){
+void setupDisplay(const char* _model, const char* _srcFilename, const char* _outputFolder){
     initscr();
     cbreak();
     noecho();
@@ -345,8 +353,8 @@ void setupDisplay(const char* _model, const char* _inputVideo, const char* _outp
     mvprintw(3, 3, "Model file: ");
     mvprintw(3, 25, boost::filesystem::path(_model).filename().c_str());
 
-    mvprintw(4, 3, "Input video file: ");
-    mvprintw(4, 25, boost::filesystem::path(_inputVideo).filename().c_str());
+    mvprintw(4, 3, "Source: ");
+    mvprintw(4, 25, boost::filesystem::path(_srcFilename).filename().c_str());
 
     mvprintw(5, 3, "Output folder: ");
     mvprintw(5, 25, boost::filesystem::path(_outputFolder).leaf().c_str());
@@ -395,12 +403,12 @@ void updateDisplay(int _frame, float _perc, double _time){
 
 #ifndef NDEBUG
 
-void setupDisplayDebug(const char* _model, const char* _inputVideo, const char* _outputFolder){
+void setupDisplayDebug(const char* _model, const char* _srcFilename, const char* _outputFolder){
     DLOG(INFO) << "Model file: " << _model;
     cout << "Model file: " << _model << endl;
 
-    DLOG(INFO) << "Input video: " << _inputVideo;
-    cout  << "Input video: " << _inputVideo << endl;
+    DLOG(INFO) << "Source: " << _srcFilename;
+    cout  << "Source: " << _srcFilename << endl;
 
     DLOG(INFO) << "Output folder: " << _outputFolder;
     cout << "Output folder: " << _outputFolder << endl;

@@ -25,7 +25,9 @@ SOURCES += main.cpp \
     mirrorUtils.cpp \
     filters/FilterSize.cpp \
     filters/FilterNMS.cpp \
-    filters/PreFilterBackgroundMask.cpp
+    filters/PreFilterBackgroundMask.cpp \
+    dataprovider/CVideoFrameProvider.cpp \
+    dataprovider/CProviderFactory.cpp
 
 HEADERS += \
     outputFormat.h \
@@ -37,4 +39,6 @@ HEADERS += \
     filters/GenericPreFilter.h \
     filters/PreFilterBackgroundSub.h \
     filters/PreFilterBackgroundMask.h \
-    dataprovider/CGenericFrameProvider.h
+    dataprovider/CGenericFrameProvider.h \
+    dataprovider/CVideoFrameProvider.h \
+    dataprovider/CProviderFactory.h

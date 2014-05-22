@@ -33,22 +33,50 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    CGenericFrameProvider.h
+ *  File:    CVideoFrameProvider.h
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: May 22, 2014.
  */
 
-#ifndef CGENERICFRAMEPROVIDER_H
-#define CGENERICFRAMEPROVIDER_H
+#include "CVideoFrameProvider.h"
 
-#include <opencv2/core/core.hpp>
+#include <exception>
+#include <stdexcept>
+#include <globalIncludes.h>
 
-class CGenericFrameProvider
+CVideoFrameProvider::CVideoFrameProvider(std::string _srcFilename)
+    : mSrcFilename(_srcFilename)
+    , mVideoSrc(_srcFilename)
+    , mInitiated(false)
 {
-public:
-    virtual double getFrameCount() = 0;
-    virtual double getCurrentFrameNumber() = 0;
-    virtual CGenericFrameProvider& operator>>(cv::Mat& _mat) = 0;
-};
+    DLOG(INFO) << "CVideoFrameProvider instanced";
+    LOG(INFO) << "Src file: " << _srcFilename;
+    if(mVideoSrc.isOpened()){
+        mInitiated = true;
+    } else {
+        LOG(ERROR) << "Could not open file: " << _srcFilename;
+        throw std::runtime_error("Could not find file: " + _srcFilename);
+    }
+}
 
-#endif // CGENERICFRAMEPROVIDER_H
+double CVideoFrameProvider::getFrameCount(){
+    if(!mInitiated)
+        return -1;
+    return mVideoSrc.get(CV_CAP_PROP_FRAME_COUNT);
+}
+
+double CVideoFrameProvider::getCurrentFrameNumber(){
+    if(!mInitiated)
+        return -1;
+    return mVideoSrc.get(CV_CAP_PROP_POS_FRAMES);
+}
+
+CGenericFrameProvider& CVideoFrameProvider::operator>>(cv::Mat& _mat){
+    if(mInitiated)
+        mVideoSrc >> _mat;
+}
+
+CVideoFrameProvider::~CVideoFrameProvider(){
+    if(mInitiated)
+        mVideoSrc.release();
+}

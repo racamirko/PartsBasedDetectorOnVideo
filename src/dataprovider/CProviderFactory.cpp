@@ -33,22 +33,19 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    CGenericFrameProvider.h
+ *  File:    CProviderFactory.cpp
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: May 22, 2014.
  */
 
-#ifndef CGENERICFRAMEPROVIDER_H
-#define CGENERICFRAMEPROVIDER_H
+#include "CProviderFactory.h"
 
-#include <opencv2/core/core.hpp>
+#include <boost/filesystem.hpp>
 
-class CGenericFrameProvider
-{
-public:
-    virtual double getFrameCount() = 0;
-    virtual double getCurrentFrameNumber() = 0;
-    virtual CGenericFrameProvider& operator>>(cv::Mat& _mat) = 0;
-};
+#include "CVideoFrameProvider.h"
 
-#endif // CGENERICFRAMEPROVIDER_H
+
+CGenericFrameProvider* CProviderFactory::getProvider(std::string _srcFilename){
+    // only one for now
+    return new CVideoFrameProvider(_srcFilename);
+}

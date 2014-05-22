@@ -33,22 +33,32 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    CGenericFrameProvider.h
+ *  File:    CVideoFrameProvider.h
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: May 22, 2014.
  */
 
-#ifndef CGENERICFRAMEPROVIDER_H
-#define CGENERICFRAMEPROVIDER_H
+#ifndef CVIDEOFRAMEPROVIDER_H
+#define CVIDEOFRAMEPROVIDER_H
 
-#include <opencv2/core/core.hpp>
+#include "CGenericFrameProvider.h"
+#include <opencv2/highgui/highgui.hpp>
 
-class CGenericFrameProvider
+class CVideoFrameProvider : public CGenericFrameProvider
 {
+protected:
+    std::string mSrcFilename;
+    cv::VideoCapture mVideoSrc;
+    bool mInitiated;
+
 public:
-    virtual double getFrameCount() = 0;
-    virtual double getCurrentFrameNumber() = 0;
-    virtual CGenericFrameProvider& operator>>(cv::Mat& _mat) = 0;
+    CVideoFrameProvider(std::string _srcFilename);
+    ~CVideoFrameProvider();
+
+    double getFrameCount();
+    double getCurrentFrameNumber();
+    CGenericFrameProvider& operator>>(cv::Mat& _mat);
+
 };
 
-#endif // CGENERICFRAMEPROVIDER_H
+#endif // CVIDEOFRAMEPROVIDER_H
