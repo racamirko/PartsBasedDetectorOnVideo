@@ -36,4 +36,5 @@ HEADERS += \
     filters/GenericPostFilter.h \
     filters/GenericPreFilter.h \
     filters/PreFilterBackgroundSub.h \
-    filters/PreFilterBackgroundMask.h
+    filters/PreFilterBackgroundMask.h \
+    dataprovider/CGenericFrameProvider.h
