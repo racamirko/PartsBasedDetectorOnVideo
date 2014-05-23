@@ -21,7 +21,7 @@ Command line options
 Program parameters:
   -h [ --help ]         produce help message
   -m [ --model ] arg    Model file to use. xml, mat or jaml format
-  -v [ --video ] arg    Video file to analyse
+  -i [ --input ] arg    Input, source for analysis (video/folder)
   -d [ --dir ] arg      Output folder
   -r [ --resume ]       Resume option [default: false]
   -n [ --nms ] arg (=0) NMS filter threshold, percentage in the range 0.0-1.0, 
@@ -33,6 +33,8 @@ Program parameters:
                         [width],[height]
   -f [ --filter ] arg   Mask filter - binary image. White regions of the image 
                         are going to be analyzed.
+  -c [ --copyFilename ] Copy the original filename to the output (with changed
+                        extension to .txt) 
 ```
 
 
