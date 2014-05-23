@@ -42,7 +42,9 @@
 
 #include <exception>
 #include <stdexcept>
-#include <globalIncludes.h>
+#include <boost/filesystem.hpp>
+
+#include "globalIncludes.h"
 
 CVideoFrameProvider::CVideoFrameProvider(std::string _srcFilename)
     : mSrcFilename(_srcFilename)
@@ -79,4 +81,8 @@ CGenericFrameProvider& CVideoFrameProvider::operator>>(cv::Mat& _mat){
 CVideoFrameProvider::~CVideoFrameProvider(){
     if(mInitiated)
         mVideoSrc.release();
+}
+
+std::string CVideoFrameProvider::getCurrentFilename(){
+    return boost::filesystem::path(mSrcFilename).filename().native();
 }

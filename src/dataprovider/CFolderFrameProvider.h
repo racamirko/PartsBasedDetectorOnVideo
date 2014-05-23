@@ -61,6 +61,7 @@ public:
     double getFrameCount();
     double getCurrentFrameNumber();
     CGenericFrameProvider& operator>>(cv::Mat& _mat);
+    std::string getCurrentFilename();
 
 };
 

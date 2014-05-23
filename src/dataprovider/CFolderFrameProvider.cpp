@@ -88,6 +88,10 @@ double CFolderFrameProvider::getCurrentFrameNumber(){
     return mCurFrame;
 }
 
+std::string CFolderFrameProvider::getCurrentFilename(){
+    return boost::filesystem::path(*mPositionIter).leaf().native();
+}
+
 CGenericFrameProvider& CFolderFrameProvider::operator>>(cv::Mat& _mat){
     _mat = cv::imread(*mPositionIter);
     mPositionIter++;

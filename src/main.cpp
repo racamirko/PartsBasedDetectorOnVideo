@@ -66,6 +66,8 @@
 
 #include "dataprovider/CProviderFactory.h"
 
+#include "output_format/CSequentialFormatter.h"
+
 #define WITH_MATLABIO
 #ifdef WITH_MATLABIO
     #include <MatlabIOModel.hpp>
@@ -146,12 +148,6 @@ int main(int argc, char *argv[])
         model->setThreshold(modelThreshold);
     }
 
-    // check output folder
-    if( outputFolder[outputFolder.length()-1] != '/' ){
-        outputFolder.append("/");
-    }
-    outputFolder.append(OUTPUT_FILENAME_FORMAT);
-
     // create the PartsBasedDetector and distribute the model parameters
     Mat_<float> depth; // we don't have one for the video, so it's just a dummy variable
     PartsBasedDetector<float> pbd;
@@ -173,6 +169,9 @@ int main(int argc, char *argv[])
 
     DLOG(INFO) << "Frame count: " << frameCount;
     DLOG(INFO) << "Start frame no: " << frameNo;
+
+    // check output folder
+    CGenericFormatter* pOutputFormat = new CSequentialFormatter(pFrameSrc, outputFolder);
 
     // pre filters
     std::vector<GenericPreFilter*> preFilters;
@@ -197,7 +196,7 @@ int main(int argc, char *argv[])
     DLOG(INFO) << "main loop";
     vectorCandidate candidates;
     Mat curFrameIm;
-    char outputFilenameBuffer[1024];
+    string outputFilename;
     clock_t timeElapsed = clock();
     while(frameNo < FRAME_LIMIT){
         DLOG(INFO) << "FrameNo " << frameNo;
@@ -209,13 +208,13 @@ int main(int argc, char *argv[])
         timeElapsed = clock();
 
         candidates.clear();
+        outputFilename = pOutputFormat->getFilename();
         frameNo = pFrameSrc->getCurrentFrameNumber();
         *pFrameSrc >> curFrameIm;
 
         // check if already exists
-        sprintf(outputFilenameBuffer, outputFolder.c_str(), (int) frameNo);
         if( optResume ){
-            if(boost::filesystem::exists(outputFilenameBuffer))
+            if(boost::filesystem::exists(outputFilename))
                 continue;
         }
 
@@ -244,7 +243,7 @@ int main(int argc, char *argv[])
 
         DLOG(INFO) << "Final all detections" << candidates;
         // output
-        ofstream outFile(outputFilenameBuffer);
+        ofstream outFile(outputFilename);
 #ifndef NDEBUG
         gOutputFormat = FT_FULL_OUTPUT;
 #endif

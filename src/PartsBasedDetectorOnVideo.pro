@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     filters/PreFilterBackgroundMask.cpp \
     dataprovider/CVideoFrameProvider.cpp \
     dataprovider/CProviderFactory.cpp \
-    dataprovider/CFolderFrameProvider.cpp
+    dataprovider/CFolderFrameProvider.cpp \
+    output_format/CSequentialFormatter.cpp
 
 HEADERS += \
     outputFormat.h \
@@ -43,4 +44,6 @@ HEADERS += \
     dataprovider/CGenericFrameProvider.h \
     dataprovider/CVideoFrameProvider.h \
     dataprovider/CProviderFactory.h \
-    dataprovider/CFolderFrameProvider.h
+    dataprovider/CFolderFrameProvider.h \
+    output_format/CSequentialFormatter.h \
+    output_format/CGenericFormatter.h
