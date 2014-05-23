@@ -27,7 +27,8 @@ SOURCES += main.cpp \
     filters/FilterNMS.cpp \
     filters/PreFilterBackgroundMask.cpp \
     dataprovider/CVideoFrameProvider.cpp \
-    dataprovider/CProviderFactory.cpp
+    dataprovider/CProviderFactory.cpp \
+    dataprovider/CFolderFrameProvider.cpp
 
 HEADERS += \
     outputFormat.h \
@@ -41,4 +42,5 @@ HEADERS += \
     filters/PreFilterBackgroundMask.h \
     dataprovider/CGenericFrameProvider.h \
     dataprovider/CVideoFrameProvider.h \
-    dataprovider/CProviderFactory.h
+    dataprovider/CProviderFactory.h \
+    dataprovider/CFolderFrameProvider.h

@@ -33,22 +33,64 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    CGenericFrameProvider.cpp
+ *  File:    CFolderFrameProvider.cpp
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: May 22, 2014.
  */
+#include "CFolderFrameProvider.h"
 
-#ifndef CGENERICFRAMEPROVIDER_H
-#define CGENERICFRAMEPROVIDER_H
+#include <boost/filesystem.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <algorithm>
 
-#include <opencv2/core/core.hpp>
+#include "globalIncludes.h"
 
-class CGenericFrameProvider
+CFolderFrameProvider::CFolderFrameProvider(std::string _srcFolder)
+    : mSrcFolder(_srcFolder)
+    , mCurFrame(-1)
 {
-public:
-    virtual double getFrameCount() = 0;
-    virtual double getCurrentFrameNumber() = 0;
-    virtual CGenericFrameProvider& operator>>(cv::Mat& _mat) = 0;
-};
+    DLOG(INFO) << "CFolderFrameProvider created";
+    init();
+}
 
-#endif // CGENERICFRAMEPROVIDER_H
+void CFolderFrameProvider::init(){
+    DLOG(INFO) << "Initializing the CFolderFrameProvider";
+    namespace fs = boost::filesystem;
+    fs::path someDir(mSrcFolder);
+    fs::directory_iterator end_iter;
+
+    DLOG(INFO) << "Listing files";
+    if ( fs::exists(someDir) && fs::is_directory(someDir)) {
+        for( fs::directory_iterator dir_iter(someDir) ; dir_iter != end_iter ; ++dir_iter) {
+            if (fs::is_regular_file(dir_iter->status()) ) {
+                DLOG(INFO) << "Loading: " << dir_iter->path().native();
+                mVecFiles.push_back(dir_iter->path().native());
+            }
+        }
+    }
+    std::sort(mVecFiles.begin(), mVecFiles.end());
+
+#ifndef NDEBUG
+    for( const std::string& curStr : mVecFiles ){
+        DLOG(INFO) << "Final order: " << curStr;
+    }
+#endif
+
+    mPositionIter = mVecFiles.begin();
+    mCurFrame = 0;
+}
+
+double CFolderFrameProvider::getFrameCount(){
+    return mVecFiles.size();
+}
+
+double CFolderFrameProvider::getCurrentFrameNumber(){
+    return mCurFrame;
+}
+
+CGenericFrameProvider& CFolderFrameProvider::operator>>(cv::Mat& _mat){
+    _mat = cv::imread(*mPositionIter);
+    mPositionIter++;
+    ++mCurFrame;
+}
+

@@ -64,8 +64,6 @@
 #include "filters/FilterNMS.h"
 #include "filters/PreFilterBackgroundMask.h"
 
-#include "dataprovider/CGenericFrameProvider.h"
-#include "dataprovider/CVideoFrameProvider.h"
 #include "dataprovider/CProviderFactory.h"
 
 #define WITH_MATLABIO

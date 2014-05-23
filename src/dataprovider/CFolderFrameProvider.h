@@ -33,22 +33,35 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    CGenericFrameProvider.cpp
+ *  File:    CFolderFrameProvider.h
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: May 22, 2014.
  */
+#ifndef CFOLDERFRAMEPROVIDER_H
+#define CFOLDERFRAMEPROVIDER_H
 
-#ifndef CGENERICFRAMEPROVIDER_H
-#define CGENERICFRAMEPROVIDER_H
+#include <string>
+#include <vector>
 
-#include <opencv2/core/core.hpp>
+#include "CGenericFrameProvider.h"
 
-class CGenericFrameProvider
+class CFolderFrameProvider : public CGenericFrameProvider
 {
+protected:
+    std::string mSrcFolder;
+    std::vector<std::string> mVecFiles;
+    std::vector<std::string>::iterator mPositionIter;
+    unsigned int mCurFrame;
+
+    void init();
+
 public:
-    virtual double getFrameCount() = 0;
-    virtual double getCurrentFrameNumber() = 0;
-    virtual CGenericFrameProvider& operator>>(cv::Mat& _mat) = 0;
+    CFolderFrameProvider(std::string _srcFolder);
+
+    double getFrameCount();
+    double getCurrentFrameNumber();
+    CGenericFrameProvider& operator>>(cv::Mat& _mat);
+
 };
 
-#endif // CGENERICFRAMEPROVIDER_H
+#endif // CFOLDERFRAMEPROVIDER_H

@@ -43,9 +43,14 @@
 #include <boost/filesystem.hpp>
 
 #include "CVideoFrameProvider.h"
-
+#include "CFolderFrameProvider.h"
 
 CGenericFrameProvider* CProviderFactory::getProvider(std::string _srcFilename){
     // only one for now
+    namespace fs = boost::filesystem;
+
+    if(boost::filesystem::is_directory(fs::path(_srcFilename)))
+        return new CFolderFrameProvider(_srcFilename);
+
     return new CVideoFrameProvider(_srcFilename);
 }
