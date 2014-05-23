@@ -29,7 +29,8 @@ SOURCES += main.cpp \
     dataprovider/CVideoFrameProvider.cpp \
     dataprovider/CProviderFactory.cpp \
     dataprovider/CFolderFrameProvider.cpp \
-    output_format/CSequentialFormatter.cpp
+    output_format/CSequentialFormatter.cpp \
+    output_format/CNameCopyFormatter.cpp
 
 HEADERS += \
     outputFormat.h \
@@ -46,4 +47,5 @@ HEADERS += \
     dataprovider/CProviderFactory.h \
     dataprovider/CFolderFrameProvider.h \
     output_format/CSequentialFormatter.h \
-    output_format/CGenericFormatter.h
+    output_format/CGenericFormatter.h \
+    output_format/CNameCopyFormatter.h

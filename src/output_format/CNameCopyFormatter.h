@@ -33,26 +33,28 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    CSequentialFormatter.h
+ *  File:    CNameCopyFormatter.h
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: May 23, 2014.
  */
-#ifndef CSEQUENTIALFORMATTER_H
-#define CSEQUENTIALFORMATTER_H
+#ifndef CNAMECOPYFORMATTER_H
+#define CNAMECOPYFORMATTER_H
 
 #include "CGenericFormatter.h"
 
-class CSequentialFormatter : public CGenericFormatter
+#include <boost/filesystem.hpp>
+
+class CNameCopyFormatter : public CGenericFormatter
 {
 protected:
-    std::string mBaseFolder, mOutputFileFormat, mWholeTemplate;
-
+    std::string mAlternativeExtension;
+    boost::filesystem::path mBaseFolder;
 public:
-    CSequentialFormatter(CGenericFrameProvider* _frameProv,
-                         std::string _baseFolder,
-                         std::string _outputFileFormat = "facedetect_frame%06d.txt");
+    CNameCopyFormatter(CGenericFrameProvider* _frameProv,
+                       std::string _baseFolder,
+                       std::string _alternativeExtension = "txt");
 
     std::string getFilename();
 };
 
-#endif // CSEQUENTIALFORMATTER_H
+#endif // CNAMECOPYFORMATTER_H

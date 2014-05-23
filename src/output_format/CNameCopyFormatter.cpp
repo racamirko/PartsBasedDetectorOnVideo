@@ -33,26 +33,37 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  File:    CSequentialFormatter.h
+ *  File:    CNameCopyFormatter.cpp
  *  Author:  Mirko Raca <name.lastname@epfl.ch>
  *  Created: May 23, 2014.
  */
-#ifndef CSEQUENTIALFORMATTER_H
-#define CSEQUENTIALFORMATTER_H
+#include "CNameCopyFormatter.h"
 
-#include "CGenericFormatter.h"
+#include <boost/filesystem.hpp>
 
-class CSequentialFormatter : public CGenericFormatter
+#include "globalIncludes.h"
+
+using namespace boost::filesystem;
+
+CNameCopyFormatter::CNameCopyFormatter(CGenericFrameProvider* _frameProv,
+                   std::string _baseFolder,
+                   std::string _alternativeExtension)
+    : CGenericFormatter(_frameProv)
+    , mBaseFolder(_baseFolder)
+    , mAlternativeExtension(_alternativeExtension)
 {
-protected:
-    std::string mBaseFolder, mOutputFileFormat, mWholeTemplate;
+    LOG(INFO) << "CNameCopyFormatter created:";
+    LOG(INFO) << "\tBase folder: " << mBaseFolder;
+    LOG(INFO) << "\tAlternative extension: " << mAlternativeExtension;
+}
 
-public:
-    CSequentialFormatter(CGenericFrameProvider* _frameProv,
-                         std::string _baseFolder,
-                         std::string _outputFileFormat = "facedetect_frame%06d.txt");
+std::string CNameCopyFormatter::getFilename(){
+    path curFilename(mpFrameProv->getCurrentFilename());
+    path justFile = curFilename.leaf();
+    justFile.replace_extension(mAlternativeExtension);
 
-    std::string getFilename();
-};
-
-#endif // CSEQUENTIALFORMATTER_H
+    path curPath(mBaseFolder);
+    curPath /= justFile;
+    DLOG(INFO) << "New filename: " << curPath;
+    return curPath.native();
+}

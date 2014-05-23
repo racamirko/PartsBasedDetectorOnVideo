@@ -67,6 +67,7 @@
 #include "dataprovider/CProviderFactory.h"
 
 #include "output_format/CSequentialFormatter.h"
+#include "output_format/CNameCopyFormatter.h"
 
 #define WITH_MATLABIO
 #ifdef WITH_MATLABIO
@@ -83,12 +84,13 @@ namespace po = boost::program_options;
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _srcFilename, // output arguments
                      float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
-                     std::string* _optMaskFilter, float* _optModelThresh);
+                     std::string* _optMaskFilter, float* _optModelThresh, bool* _copyFilename);
 
 #define OUTPUT_FILENAME_FORMAT "facedetect_frame%06d.txt"
 #define DEFAULT_MIRRORING false
 #define DEFAULT_RESUME false
 #define DEFAULT_MODEL_THRESH -100.0f
+#define DEFAULT_COPY_FILENAME false
 
 #ifdef NDEBUG
     void setupDisplay(const char* _model, const char* _srcFilename, const char* _outputFolder);
@@ -110,6 +112,7 @@ int main(int argc, char *argv[])
     float modelThreshold = DEFAULT_MODEL_THRESH;
     bool optMirroring = DEFAULT_MIRRORING;
     bool optResume = DEFAULT_RESUME;
+    bool optCopyFilename = DEFAULT_COPY_FILENAME;
     string outputFolder = "";
     string modelFile = "";
     string srcFilename = "";
@@ -119,7 +122,8 @@ int main(int argc, char *argv[])
     // general variables
     boost::scoped_ptr<Model> model;
 
-    parseArguments(argc, argv, &modelFile, &outputFolder, &srcFilename, &nmsThreshold, &optMirroring, &optResume, &sizeFilter, &maskFilterFile, &modelThreshold);
+    parseArguments(argc, argv, &modelFile, &outputFolder, &srcFilename, &nmsThreshold, &optMirroring, &optResume, &sizeFilter,
+                   &maskFilterFile, &modelThreshold, &optCopyFilename);
 
     // determine the type of model to read
     string ext = boost::filesystem::path(modelFile).extension().string();
@@ -171,7 +175,11 @@ int main(int argc, char *argv[])
     DLOG(INFO) << "Start frame no: " << frameNo;
 
     // check output folder
-    CGenericFormatter* pOutputFormat = new CSequentialFormatter(pFrameSrc, outputFolder);
+    CGenericFormatter* pOutputFormat = NULL;
+    if(optCopyFilename)
+        pOutputFormat = new CNameCopyFormatter(pFrameSrc, outputFolder);
+    else
+        pOutputFormat = new CSequentialFormatter(pFrameSrc, outputFolder);
 
     // pre filters
     std::vector<GenericPreFilter*> preFilters;
@@ -271,7 +279,7 @@ int main(int argc, char *argv[])
 void parseArguments( int _argc, char* _argv[], // input arguments
                      std::string* _modelFile, std::string* _outputFolder, std::string* _srcFilename, // output arguments
                      float* _nmsThreshold, bool* _optMirroring, bool* _optResume, vector<float>* _optSizeFilter,
-                     std::string* _optMaskFilter, float* _optModelThresh)
+                     std::string* _optMaskFilter, float* _optModelThresh, bool* _copyFilename)
 {
     po::options_description opts("Program parameters");
     opts.add_options()
@@ -284,7 +292,8 @@ void parseArguments( int _argc, char* _argv[], // input arguments
             ("mirror", "Mirroring option - mirror the video image horizontally and process 2x (with corrections of the detections) [default: false]")
             ("size,s", po::value< vector<float> >(_optSizeFilter), "Size filter. Eliminate all instances bigger then [width],[height]" )
             ("filter,f", po::value<string>(_optMaskFilter), "Mask filter - binary image. White regions of the image are going to be analyzed.")
-            ("thresh,t", po::value<float>(_optModelThresh)->default_value(DEFAULT_MODEL_THRESH), "Theshold of the model. Default value is whatever is used in the model file");
+            ("thresh,t", po::value<float>(_optModelThresh)->default_value(DEFAULT_MODEL_THRESH), "Theshold of the model. Default value is whatever is used in the model file")
+            ("copyFilename,c", "Copy the original filename to the output (with changed extension to .txt)");
     po::variables_map vm;
     po::store(po::parse_command_line(_argc, _argv, opts), vm);
     po::notify(vm);
@@ -319,6 +328,7 @@ void parseArguments( int _argc, char* _argv[], // input arguments
 
     *_optMirroring = (vm.count("mirror") > 0) ? true : false;
     *_optResume = (vm.count("resume") > 0) ? true : false;
+    *_copyFilename = (vm.count("copyFilename") > 0) ? true : false;
 
     LOG(INFO) << "Model file: " << *_modelFile;
     LOG(INFO) << "Input path: " << *_srcFilename;
